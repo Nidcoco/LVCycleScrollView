@@ -20,7 +20,7 @@ Pod::Spec.new do |spec|
 
   spec.license          = { :type => 'MIT', :file => 'LICENSE' }
 
-  spec.author             = { "Levi" => "2387356991@qq.com" }
+  spec.author             = { "lijunyu" => "lijy@figo.cn" }
   
   spec.source       = { :git => "https://github.com/li199508/LVCycleScrollView.git", :tag => "0.0.1" }
 
