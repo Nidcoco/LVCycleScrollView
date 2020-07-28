@@ -437,10 +437,11 @@
     }
     
     NSInteger index = 0;
+    NSInteger cellCount = [self.mainView numberOfItemsInSection:0];
     
     if (_imageScrollType == LVImageScrollCardSeven) {
         CGFloat anglePerItem = self.anglePerItem;
-        CGFloat angleAtExtreme = ([self.mainView numberOfItemsInSection:0] - 1) * anglePerItem;
+        CGFloat angleAtExtreme = (cellCount - 1) * anglePerItem;
         CGFloat factor;
         // 默认停下来时，旋转的角度
         CGFloat proposedAngle;
@@ -449,26 +450,23 @@
             proposedAngle = factor * self.mainView.contentOffset.y;
 
         }else {
-            CGFloat anglePerItem = self.anglePerItem;
-            CGFloat angleAtExtreme = ([self.mainView numberOfItemsInSection:0] - 1) * anglePerItem;
-            CGFloat factor = angleAtExtreme / (self.mainView.contentSize.width - _selfWidth);
+            factor = angleAtExtreme / (self.mainView.contentSize.width - _selfWidth);
             proposedAngle = factor * self.mainView.contentOffset.x;
         }
         CGFloat ratio = proposedAngle / anglePerItem;
         index = roundf(ratio);
-        if (index < 0) {
-            index = 0;
-        }
-        NSInteger cellCount = [self.mainView numberOfItemsInSection:0];
-        if (index >= cellCount) {
-            index = cellCount - 1;
-        }
     }else {
         if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
             index = roundf((_mainView.contentOffset.y + _selfHeight / 2 - (_itemSize.height + self.space) / 2) / (_itemSize.height + self.space));
         }else {
             index = roundf((_mainView.contentOffset.x + _selfWidth / 2 - (_itemSize.width + self.space) / 2) / (_itemSize.width + self.space));
         }
+    }
+    if (index < 0) {
+        index = 0;
+    }
+    if (index >= cellCount) {
+        index = cellCount - 1;
     }
     return index;
 }

@@ -18,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define kAnglePerItem M_PI/12
 
-#define kVisibleCount 4
+#define kVisibleCount 5
 
 /**
 图片滚动的样式

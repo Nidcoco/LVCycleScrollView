@@ -67,31 +67,57 @@
             self.collectionView.contentInset = UIEdgeInsetsMake(0, (_viewHeight - _itemHeight) / 2, 0, (_viewHeight - _itemHeight) / 2);
         }
     }
+    
     [self.attributeArray removeAllObjects];
+    
     _cellCount = [self.collectionView numberOfItemsInSection:0];
     if (_cellCount == 0) {
         return;
     }
     
-    NSInteger minIndex = 0;
-    NSInteger maxIndex = _cellCount - 1;
-    if (self.visibleCount <= 0) {
-        NSAssert(NO, @"visibleCount不能小于等于0");
-    }else {
-        // 表示collectionView最中间的cell的中间的偏移量
-        CGFloat centerY = (self.scrollDirection == UICollectionViewScrollDirectionVertical ? self.collectionView.contentOffset.y : self.collectionView.contentOffset.x) + _viewHeight / 2;
-        NSInteger index = centerY / _itemHeight;
-        NSInteger count = (self.visibleCount - 1) / 2;
-        minIndex = MAX(0, (index - count));
-        maxIndex = MIN((_cellCount - 1), (index + count));
-    }
-
     /// 获取总的旋转的角度
     CGFloat angleAtExtreme = (_cellCount - 1) * self.anglePerItem;
     /// 随着UICollectionView的移动，第0个cell初始时的角度
     CGFloat angle;
     //// 锚点的位置
     CGFloat anchorPoint;
+    
+    NSInteger minIndex = 0;
+    NSInteger maxIndex = _cellCount - 1;
+    if (self.visibleCount <= 0) {
+        NSAssert(NO, @"visibleCount不能小于等于0");
+    }else {
+        NSInteger index = 0;
+        if (self.scrollType != LVImageScrollCardSeven) {
+            CGFloat centerY = (self.scrollDirection == UICollectionViewScrollDirectionVertical ? self.collectionView.contentOffset.y : self.collectionView.contentOffset.x) + _viewHeight / 2;
+            index = centerY / _itemHeight;
+        }else {
+            CGFloat factor;
+            // 默认停下来时，旋转的角度
+            CGFloat proposedAngle;
+            if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
+                factor = angleAtExtreme / (self.collectionView.contentSize.height - _viewHeight);
+                proposedAngle = factor * self.collectionView.contentOffset.y;
+
+            }else {
+                factor = angleAtExtreme / (self.collectionView.contentSize.width - _viewHeight);
+                proposedAngle = factor * self.collectionView.contentOffset.x;
+            }
+            CGFloat ratio = proposedAngle / _anglePerItem;
+            index = roundf(ratio);
+
+        }
+        if (index < 0) {
+            index = 0;
+        }
+        if (index >= _cellCount) {
+            index = _cellCount - 1;
+        }
+
+        NSInteger count = (self.visibleCount - 1) / 2;
+        minIndex = MAX(0, (index - count));
+        maxIndex = MIN((_cellCount - 1), (index + count));
+    }
 
     if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
         angle = - angleAtExtreme * self.collectionView.contentOffset.y / (self.collectionView.contentSize.height - _viewHeight);
