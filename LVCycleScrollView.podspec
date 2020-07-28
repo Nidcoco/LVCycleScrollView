@@ -28,13 +28,6 @@ Pod::Spec.new do |spec|
   spec.source_files  = "LVCycleScrollView/**/*.{h,m}"
   spec.requires_arc  = true
   spec.ios.deployment_target = '8.0'
-  
-  #TAPageControl
-  spec.subspec 'TAPageControl' do |ta|
-      ta.source_files = 'LVCycleScrollView/TAPageControl/*.{h,m}'
-      ta.frameworks = 'Foundation','UIKit'
-  end
-
 
 
 end
