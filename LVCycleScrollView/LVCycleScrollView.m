@@ -9,6 +9,7 @@
 #import "LVCycleScrollView.h"
 #import "LVCollectionViewCell.h"
 #import "TAPageControl.h"
+#import <SDWebImage/SDWebImage.h>
 
 #define kPageControlDotSize CGSizeMake(8, 8)
 
@@ -206,7 +207,25 @@
         [self setupTextTimer:cell];
         
     }else {
-        cell.imageView.image = [UIImage imageNamed:self.dataSourceArr[indexOnPageControl]];
+        NSString *imagePath = self.dataSourceArr[indexOnPageControl];
+        if (self.scrollType == LVImageScroll && [imagePath isKindOfClass:[NSString class]]) {
+            if ([imagePath hasPrefix:@"http"]) {
+                if (self.placeholderImage) {
+                    [cell.imageView sd_setImageWithURL:[NSURL URLWithString:imagePath] placeholderImage:self.placeholderImage];
+                }else {
+                    [cell.imageView sd_setImageWithURL:[NSURL URLWithString:imagePath]];
+                }
+            }else {
+                UIImage *image = [UIImage imageNamed:imagePath];
+                if (!image) {
+                    image = [UIImage imageWithContentsOfFile:imagePath];
+                }
+                cell.imageView.image = image;
+            }
+        }else if (self.scrollType == LVImageScroll && [imagePath isKindOfClass:[UIImage class]]) {
+            cell.imageView.image = (UIImage *)imagePath;
+        }
+        
         if (_titlesArray.count) {
             if (self.scrollType == LVImageScroll && _titlesArray.count == 1) {
                 cell.text = _titlesArray.firstObject;
@@ -781,9 +800,9 @@
     }
     _imagesArray = imagesArray;
     NSMutableArray *temp = [NSMutableArray new];
-    [_imagesArray enumerateObjectsUsingBlock:^(NSString * obj, NSUInteger idx, BOOL * stop) {
+    [_imagesArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL * stop) {
         NSString *urlString;
-        if ([obj isKindOfClass:[NSString class]]) {
+        if ([obj isKindOfClass:[NSString class]] || [obj isKindOfClass:[UIImage class]]) {
             urlString = obj;
         } else if ([obj isKindOfClass:[NSURL class]]) {
             NSURL *url = (NSURL *)obj;

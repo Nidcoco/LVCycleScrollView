@@ -159,6 +159,9 @@ typedef enum {
 
 /*--------------------------- 图片滚动属性 ----------------------------*/
 
+/// 占位图，用于网络未加载到图片时
+@property (nonatomic, strong) UIImage *placeholderImage;
+
 /// 缩放比,样式1,2,3,4中的缩放比例调节,默认是0.8
 @property (nonatomic, assign) CGFloat zoomScale;
 
