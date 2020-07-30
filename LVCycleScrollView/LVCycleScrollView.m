@@ -142,7 +142,7 @@
     if (CGSizeEqualToSize(CGSizeZero, _itemSize)) {
         NSAssert(NO, @"该参数不能为zero");
     }
-    LVCollectionViewLayout *layout = [[LVCollectionViewLayout alloc] initWithImageScrollType:_imageScrollType];
+    LVCollectionViewLayout *layout = [[LVCollectionViewLayout alloc] init];
     layout.scrollDirection = _scrollDirection;
     layout.itemSize = _itemSize;
     
