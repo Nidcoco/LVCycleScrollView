@@ -886,7 +886,7 @@
 - (void)setImageScrollType:(LVImageScrollType)imageScrollType
 {
     _imageScrollType = imageScrollType;
-    _mainViewLayout.imageScrollType = imageScrollType;
+    _mainViewLayout.scrollType = imageScrollType;
 }
 
 - (void)setSpace:(CGFloat)space
