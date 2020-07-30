@@ -136,7 +136,7 @@
     if (CGSizeEqualToSize(CGSizeZero, _itemSize)) {
         NSAssert(NO, @"该参数不能为zero");
     }
-    LVCollectionViewLayout *layout = [[LVCollectionViewLayout alloc] initWithImageScrollType:_imageScrollType];
+    LVCollectionViewLayout *layout = [[LVCollectionViewLayout alloc] init];
     layout.scrollDirection = _scrollDirection;
     layout.itemSize = _itemSize;
     
@@ -880,11 +880,7 @@
 - (void)setImageScrollType:(LVImageScrollType)imageScrollType
 {
     _imageScrollType = imageScrollType;
-    LVCollectionViewLayout *layout = [[LVCollectionViewLayout alloc] initWithImageScrollType:_imageScrollType];
-    layout.scrollDirection = _scrollDirection;
-    layout.itemSize = _itemSize;
-    _mainViewLayout = layout;
-    self.mainView.collectionViewLayout = layout;
+    _mainViewLayout.scrollType = imageScrollType;
 }
 
 - (void)setSpace:(CGFloat)space
