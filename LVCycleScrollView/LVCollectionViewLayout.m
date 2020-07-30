@@ -11,8 +11,6 @@
 
 @interface LVCollectionViewLayout ()<UICollectionViewDelegate>
 
-@property (nonatomic, assign) LVImageScrollType scrollType;
-
 /// 所有的item的属性数组
 @property (nonatomic,strong) NSMutableArray *attributeArray;
 
