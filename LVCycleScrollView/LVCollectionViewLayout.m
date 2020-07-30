@@ -33,10 +33,9 @@
     return [LVCollectionViewLayoutAttributes class];
 }
 
-- (instancetype)initWithImageScrollType:(LVImageScrollType)scrollType
+- (instancetype)init
 {
     if (self = [super init]) {
-        self.scrollType = scrollType;
         [self initialization];
     }
     return self;

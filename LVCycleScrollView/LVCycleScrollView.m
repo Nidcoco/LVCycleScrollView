@@ -59,6 +59,12 @@
 
 @property (nonatomic, weak) LVCollectionViewLayout *mainViewLayout;
 
+/// 滚动类型
+@property (nonatomic, assign) LVScrollType scrollType;
+
+/// 滚动方式
+@property (nonatomic, assign) UICollectionViewScrollDirection scrollDirection;
+
 
 @end
 
@@ -880,11 +886,7 @@
 - (void)setImageScrollType:(LVImageScrollType)imageScrollType
 {
     _imageScrollType = imageScrollType;
-    LVCollectionViewLayout *layout = [[LVCollectionViewLayout alloc] initWithImageScrollType:_imageScrollType];
-    layout.scrollDirection = _scrollDirection;
-    layout.itemSize = _itemSize;
-    _mainViewLayout = layout;
-    self.mainView.collectionViewLayout = layout;
+    _mainViewLayout.imageScrollType = imageScrollType;
 }
 
 - (void)setSpace:(CGFloat)space

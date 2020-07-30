@@ -48,7 +48,7 @@
     } else {
         CGFloat textLabelW = CGRectGetWidth(self.contentView.bounds);
         CGFloat textLabelH = self.textLabelHeight;
-        CGFloat textLabelX = 2;
+        CGFloat textLabelX = 0;
         CGFloat textLabelY = CGRectGetHeight(self.contentView.bounds) - textLabelH;
         _textLabel.frame = CGRectMake(textLabelX, textLabelY, textLabelW, textLabelH);
         

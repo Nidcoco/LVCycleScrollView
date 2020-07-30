@@ -37,8 +37,6 @@ typedef enum {
 
 @interface LVCollectionViewLayout : UICollectionViewLayout
 
-- (instancetype)initWithImageScrollType:(LVImageScrollType)scrollType;
-
 /// 图片的大小
 @property (nonatomic, assign) CGSize itemSize;
 

@@ -13,6 +13,8 @@
 		0A41E68C24D1DD3400B012B8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A41E68A24D1DD3400B012B8 /* LaunchScreen.storyboard */; };
 		0A41E68F24D1DD3400B012B8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A41E68E24D1DD3400B012B8 /* main.m */; };
 		0A41E69724D1DF3D00B012B8 /* LVMainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A41E69624D1DF3D00B012B8 /* LVMainViewController.m */; };
+		0A41E6B024D2942D00B012B8 /* LVImageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A41E6AF24D2942D00B012B8 /* LVImageViewController.m */; };
+		0A41E6B324D29F1E00B012B8 /* LVShowImageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A41E6B224D29F1E00B012B8 /* LVShowImageViewController.m */; };
 		4850CEBA8BEFB23006FC6A9A /* libPods-LVCycleScrollViewDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = ACB688CA3BF7F729D24D53D7 /* libPods-LVCycleScrollViewDemo.a */; };
 /* End PBXBuildFile section */
 
@@ -27,6 +29,10 @@
 		0A41E68E24D1DD3400B012B8 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		0A41E69524D1DF3D00B012B8 /* LVMainViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LVMainViewController.h; sourceTree = "<group>"; };
 		0A41E69624D1DF3D00B012B8 /* LVMainViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LVMainViewController.m; sourceTree = "<group>"; };
+		0A41E6AE24D2942D00B012B8 /* LVImageViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LVImageViewController.h; sourceTree = "<group>"; };
+		0A41E6AF24D2942D00B012B8 /* LVImageViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LVImageViewController.m; sourceTree = "<group>"; };
+		0A41E6B124D29F1E00B012B8 /* LVShowImageViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LVShowImageViewController.h; sourceTree = "<group>"; };
+		0A41E6B224D29F1E00B012B8 /* LVShowImageViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LVShowImageViewController.m; sourceTree = "<group>"; };
 		83AFE4EB6BE147ABAA8368D6 /* Pods-LVCycleScrollViewDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LVCycleScrollViewDemo.release.xcconfig"; path = "Target Support Files/Pods-LVCycleScrollViewDemo/Pods-LVCycleScrollViewDemo.release.xcconfig"; sourceTree = "<group>"; };
 		A6FBEEE64F5E92D0717055C7 /* Pods-LVCycleScrollViewDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LVCycleScrollViewDemo.debug.xcconfig"; path = "Target Support Files/Pods-LVCycleScrollViewDemo/Pods-LVCycleScrollViewDemo.debug.xcconfig"; sourceTree = "<group>"; };
 		ACB688CA3BF7F729D24D53D7 /* libPods-LVCycleScrollViewDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-LVCycleScrollViewDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -50,7 +56,6 @@
 				A6FBEEE64F5E92D0717055C7 /* Pods-LVCycleScrollViewDemo.debug.xcconfig */,
 				83AFE4EB6BE147ABAA8368D6 /* Pods-LVCycleScrollViewDemo.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -84,6 +89,10 @@
 				0A41E68E24D1DD3400B012B8 /* main.m */,
 				0A41E69524D1DF3D00B012B8 /* LVMainViewController.h */,
 				0A41E69624D1DF3D00B012B8 /* LVMainViewController.m */,
+				0A41E6AE24D2942D00B012B8 /* LVImageViewController.h */,
+				0A41E6AF24D2942D00B012B8 /* LVImageViewController.m */,
+				0A41E6B124D29F1E00B012B8 /* LVShowImageViewController.h */,
+				0A41E6B224D29F1E00B012B8 /* LVShowImageViewController.m */,
 			);
 			path = LVCycleScrollViewDemo;
 			sourceTree = "<group>";
@@ -195,7 +204,9 @@
 			files = (
 				0A41E67E24D1DD3100B012B8 /* AppDelegate.m in Sources */,
 				0A41E68F24D1DD3400B012B8 /* main.m in Sources */,
+				0A41E6B024D2942D00B012B8 /* LVImageViewController.m in Sources */,
 				0A41E69724D1DF3D00B012B8 /* LVMainViewController.m in Sources */,
+				0A41E6B324D29F1E00B012B8 /* LVShowImageViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

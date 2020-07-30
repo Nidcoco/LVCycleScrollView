@@ -8,6 +8,13 @@
 
 #import <UIKit/UIKit.h>
 
+#define iPhoneX \
+({BOOL isPhoneX = NO;\
+if (@available(iOS 11.0, *)) {\
+isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bottom > 0.0;\
+}\
+(isPhoneX);})
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface LVMainViewController : UIViewController

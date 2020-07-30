@@ -31,21 +31,12 @@ typedef enum {
 }LVTextScrollMode;
 
 /**
- UIPageControl的位置
- */
+PageControl位置
+*/
 typedef enum {
     LVPageControlCenter,
     LVPageControlLeft,
     LVPageControlRight,
-}LVPageControlMode;
-
-/**
-PageControl位置
-*/
-typedef enum {
-    LVAlimentCenter,
-    LVAlimentLeft,
-    LVAlimentRight,
 } LVPageControlAliment;
 
 typedef enum {
