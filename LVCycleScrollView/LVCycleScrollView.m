@@ -10,6 +10,7 @@
 #import "LVCollectionViewCell.h"
 #import "TAPageControl.h"
 #import <SDWebImage/SDWebImage.h>
+#import "LVProxy.h"
 
 #define kPageControlDotSize CGSizeMake(8, 8)
 
@@ -96,7 +97,7 @@
     _selfWidth = self.frame.size.width;
     _selfHeight = self.frame.size.height;
     
-    _maxSize = CGSizeMake(_selfWidth - 2, MAXFLOAT);
+    _maxSize = CGSizeMake(_selfWidth - 4, MAXFLOAT);//左右内边距2
     
     _showPageControl = YES;
     
@@ -210,7 +211,7 @@
     if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone && _titlesArray) {
         [self calculateAction];
         cell.text = self.textString;
-        [self setupTextTimer:cell];
+        [self setupTextTimer];
         
     }else {
         NSString *imagePath = self.dataSourceArr[indexOnPageControl];
@@ -487,26 +488,25 @@
 {
     [self invalidateTimer]; // 创建定时器前先停止定时器，不然会出现僵尸定时器，导致轮播频率错误
     
-    __weak typeof(self) weakSelf = self;
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.autoScrollTimeInterval repeats:YES block:^(NSTimer * _Nonnull timer) {
-        [weakSelf.timer setFireDate:[NSDate dateWithTimeIntervalSinceNow:weakSelf.autoScrollTimeInterval + (weakSelf.scrollTime == 0 ? 0.3 : weakSelf.scrollTime)]];
-        [weakSelf automaticScroll];
-    }];
+    LVProxy *proxy = [[LVProxy alloc] initWithObjc:self];
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.autoScrollTimeInterval target:proxy selector:@selector(automaticScroll) userInfo:nil repeats:YES];
+    [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
+
 }
 
 // 有样式的文字滚动
-- (void)setupTextTimer:(LVCollectionViewCell *)cell
+- (void)setupTextTimer
 {
     [self invalidateTimer]; // 创建定时器前先停止定时器，不然会出现僵尸定时器，导致轮播频率错误
-    __weak typeof(self) weakSelf = self;
-    __weak typeof(cell) weakCell = cell;
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.speed repeats:YES block:^(NSTimer * _Nonnull timer) {
-        [weakSelf setupTextScroll:weakCell];
-    }];
+    
+    LVProxy *proxy = [[LVProxy alloc] initWithObjc:self];
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.speed target:proxy selector:@selector(setupTextScroll) userInfo:nil repeats:YES];
+    [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
 }
 
-- (void)setupTextScroll:(LVCollectionViewCell *)cell
+- (void)setupTextScroll
 {
+    LVCollectionViewCell *cell = (LVCollectionViewCell *)[self.mainView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
     CGFloat cellOrigin = self.scrollDirection == UICollectionViewScrollDirectionVertical ? cell.textLabel.frame.origin.y :cell.textLabel.frame.origin.x;
     if (self.textScrollMode != LVTextScrollModeFour) {
         cellOrigin --;
@@ -514,10 +514,10 @@
         cellOrigin += self.wanderingOffset;
         CGFloat range = self.scrollDirection == UICollectionViewScrollDirectionVertical ? _selfHeight : _selfWidth;
         if (self.textSize > range) {
-            if (cellOrigin < - (self.textSize - range + 2)) {
+            if (cellOrigin < - (self.textSize - range)) {
                 self.wanderingOffset = 1;
             }
-            if (cellOrigin > 2) {
+            if (cellOrigin > 0) {
                 self.wanderingOffset = - 1;
             }
         }else if (self.textSize < range){
@@ -531,7 +531,7 @@
     }
     
     if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-        cell.textFrame = CGRectMake(2, cellOrigin, _selfWidth - 2, self.textSize);
+        cell.textFrame = CGRectMake(0, cellOrigin, _selfWidth, self.textSize);
     }else {
         cell.textFrame = CGRectMake(cellOrigin, 0  , self.textSize, _selfHeight);
     }
@@ -539,7 +539,7 @@
     CGFloat range;
     if (self.textScrollMode != LVTextScrollModeFour) {
         if (self.textScrollMode == LVTextScrollModeOne) {
-            range = - self.textSize / (self.index + 1);
+            range = - self.textSize / (self.index + 1) + 2;// 加上一边的内边距 2
         }else {
             range = - self.textSize;
         }
@@ -554,21 +554,21 @@
                 if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
                     self.textSize = [self heightWithString:self.textString font:self.textFont maxSize:self.maxSize];
                 }else {
-                    self.textSize = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width;
+                    self.textSize = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width + 4;
                 }
             }
             
             if (self.textScrollMode == LVTextScrollModeThird) {
                 if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-                    cell.textFrame = CGRectMake(2, _selfHeight, _selfWidth, self.textSize);
+                    cell.textFrame = CGRectMake(0, _selfHeight, _selfWidth, self.textSize);
                 }else {
                     cell.textFrame = CGRectMake(_selfWidth, 0, self.textSize, _selfHeight);
                 }
             }else {
                 if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-                    cell.textFrame = CGRectMake(2, 0, _selfWidth - 2, self.textSize);
+                    cell.textFrame = CGRectMake(0, 0, _selfWidth, self.textSize);
                 }else {
-                    cell.textFrame = CGRectMake(2, 0, self.textSize, _selfHeight);
+                    cell.textFrame = CGRectMake(0, 0, self.textSize, _selfHeight);
                 }
             }
             cell.text = self.textString;
@@ -594,6 +594,7 @@
 
 - (void)automaticScroll
 {
+    [self.timer setFireDate:[NSDate dateWithTimeIntervalSinceNow:self.autoScrollTimeInterval + (self.scrollTime == 0 ? 0.3 : self.scrollTime)]];
     if (0 == _totalItemsCount) return;
     NSInteger currentIndex = [self currentIndex];
     NSInteger targetIndex = currentIndex + 1;
@@ -717,7 +718,7 @@
             self.textSize = [self heightWithString:self.textString font:self.textFont maxSize:self.maxSize];
         }else {
             self.textString = [self.titlesArray componentsJoinedByString:@" "];
-            self.textSize = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width;
+            self.textSize = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width + 4;
         }
         
         if (self.textScrollMode == LVTextScrollModeOne) {
@@ -729,7 +730,7 @@
                     totalSize = [self heightWithString:totalText font:self.textFont maxSize:self.maxSize];
                 }else {
                     totalText = [NSString stringWithFormat:@"%@ %@",totalText,self.textString];
-                    totalSize = [totalText sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width;
+                    totalSize = [totalText sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width + 4;
                 }
                 
                 self.index ++;
@@ -742,7 +743,7 @@
         if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
             self.textSize = [self heightWithString:self.textString font:self.textFont maxSize:self.maxSize];
         }else {
-            self.textSize = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width;
+            self.textSize = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width + 4;
         }
     }
 }
@@ -751,7 +752,7 @@
 {
     NSDictionary *dict = @{NSFontAttributeName: font};
     CGSize textSize = [str boundingRectWithSize:maxSize options:NSStringDrawingUsesLineFragmentOrigin attributes:dict context:nil].size;
-    return textSize.height;
+    return textSize.height + 4;
 }
 
 
@@ -782,8 +783,7 @@
 - (void)move
 {
     if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone) {
-        LVCollectionViewCell *cell = (LVCollectionViewCell *)[self.mainView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-        [self setupTextTimer:cell];
+        [self setupTextTimer];
     }else {
         [self setupImageTimer];
     }

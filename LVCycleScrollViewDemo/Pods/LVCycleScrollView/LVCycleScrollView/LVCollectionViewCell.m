@@ -26,7 +26,7 @@
     // 不设置,改变UICollectionViewLayoutAttributes里面的frame,首个和最后一个图片大小不会随着cell的大小发生变化
     _imageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
-    _textLabel = [[UILabel alloc] init];
+    _textLabel = [[LVLabel alloc] init];
     _textLabel.hidden = YES;
     [self.contentView addSubview:_textLabel];
 }
@@ -38,12 +38,12 @@
     if (self.scrollType == LVOnlyTextScroll) {
         if (self.isTextModeThird) {
             if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-                _textLabel.frame = CGRectMake(2, CGRectGetHeight(self.contentView.bounds), CGRectGetWidth(self.contentView.bounds), CGRectGetHeight(self.contentView.bounds));
+                _textLabel.frame = CGRectMake(0, CGRectGetHeight(self.contentView.bounds), CGRectGetWidth(self.contentView.bounds), CGRectGetHeight(self.contentView.bounds));
             }else {
                 _textLabel.frame = CGRectMake(CGRectGetWidth(self.contentView.bounds), 0, CGRectGetWidth(self.contentView.bounds), CGRectGetHeight(self.contentView.bounds));
             }
         }else {
-            _textLabel.frame = CGRectMake(2, 0, CGRectGetWidth(self.contentView.bounds), CGRectGetHeight(self.contentView.bounds));
+            _textLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.contentView.bounds), CGRectGetHeight(self.contentView.bounds));
         }
     } else {
         CGFloat textLabelW = CGRectGetWidth(self.contentView.bounds);
@@ -58,7 +58,6 @@
         }
         
     }
-    
     
 }
 

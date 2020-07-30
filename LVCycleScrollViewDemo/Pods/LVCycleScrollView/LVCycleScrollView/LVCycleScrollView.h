@@ -84,12 +84,6 @@ typedef enum {
 /// 图片滚动,点击cell是否滑动到该cell,默认NO
 @property (nonatomic,assign) BOOL isTouchScrollToIndex;
 
-/// 滚动类型
-@property (nonatomic, assign) LVScrollType scrollType;
-
-/// 滚动方式
-@property (nonatomic, assign) UICollectionViewScrollDirection scrollDirection;
-
 /// 图片及无样式的纯文字滚动时间,由于是使用系统私有属性contentOffsetAnimationDuration设置的,不保证以后会不会crash或者会被苹果商店拒绝,若以后使用崩溃则不用或需要更新库,[UIView animateWithDuration:1.2 delay:0.02 options:UIViewAnimationCurveLinear animations:^{ [colorPaletteScrollView setContentOffset: offset ];}completion:^(BOOL finished){ NSLog(@"animate");} ];,由于单元格重用,滑动的时候,前面的cell在划入最左边会突然消失留白
 @property (nonatomic, assign) CGFloat scrollTime;
 

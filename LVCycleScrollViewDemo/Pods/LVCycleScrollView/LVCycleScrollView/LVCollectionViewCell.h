@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "LVCycleScrollView.h"
+#import "LVLabel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -17,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) UIImageView *imageView;
 
 /// 文字
-@property (nonatomic, strong) UILabel *textLabel;
+@property (nonatomic, strong) LVLabel *textLabel;
 @property (nonatomic, strong) NSString *text;
 
 @property (nonatomic, strong) UIColor *textLabelTextColor;
