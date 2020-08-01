@@ -23,7 +23,10 @@
     if (self.index == 0) {
         self.title = @"无样式";
         //无间隙效果
-        LVCycleScrollView *view = [[LVCycleScrollView alloc] initWithFrame:CGRectMake(0, navBarHeight + 10, self.view.frame.size.width, 40) itemSize:CGSizeMake(self.view.frame.size.width, 40) scrollType:LVOnlyTextScroll scrollDirection:UICollectionViewScrollDirectionHorizontal];
+        LVCycleScrollView *view = [[LVCycleScrollView alloc] initWithFrame:CGRectMake(0, navBarHeight + 10, self.view.frame.size.width, 40)
+                                                                  itemSize:CGSizeMake(self.view.frame.size.width, 40)
+                                                                scrollType:LVOnlyTextScroll
+                                                           scrollDirection:UICollectionViewScrollDirectionHorizontal];
         view.titlesArray = @[@"多喜欢阿离一点,可以吗?",@"吟诵十四行诗，作为仲夏之梦的开场",@"见过我家那只可爱的宠物吗?它的名字叫大白",@"想要欣赏妾身的舞姿吗?"];
         view.textBackgroundColor = [UIColor colorWithRed:64/255.f green:151/255.f blue:255/255.f alpha:0.5];
         [self.view addSubview:view];
@@ -81,6 +84,7 @@
         self.title = [NSString stringWithFormat:@"样式%ld",self.index];
         LVCycleScrollView *view = [[LVCycleScrollView alloc] initWithFrame:CGRectMake(0, navBarHeight + 10, self.view.frame.size.width, 40) itemSize:CGSizeMake(self.view.frame.size.width, 40) scrollType:LVOnlyTextScroll scrollDirection:UICollectionViewScrollDirectionHorizontal];
         view.titlesArray = @[@"多喜欢阿离一点,可以吗?",@"吟诵十四行诗，作为仲夏之梦的开场",@"见过我家那只可爱的宠物吗?它的名字叫大白",@"想要欣赏妾身的舞姿吗?"];
+        view.speed = 0.01;
         view.textBackgroundColor = [UIColor colorWithRed:64/255.f green:151/255.f blue:255/255.f alpha:0.5];
         if (self.index == 1) {
             view.textScrollMode = LVTextScrollModeOne;

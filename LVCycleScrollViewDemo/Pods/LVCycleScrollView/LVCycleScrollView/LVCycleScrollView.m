@@ -97,7 +97,7 @@
     _selfWidth = self.frame.size.width;
     _selfHeight = self.frame.size.height;
     
-    _maxSize = CGSizeMake(_selfWidth - 4, MAXFLOAT);
+    _maxSize = CGSizeMake(_selfWidth - 4, MAXFLOAT);//左右内边距2
     
     _showPageControl = YES;
     
@@ -261,6 +261,7 @@
         cell.textLabel.textAlignment = _textLabelTextAlignment;
         cell.textLabelHeight = _textLabelHeight;
         cell.cellCornerRadius = _cellCornerRadius;
+        cell.imageView.contentMode = _imageContentMode;
     }
 
     return cell;
