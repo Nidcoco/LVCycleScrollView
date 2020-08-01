@@ -94,47 +94,47 @@
 
 - (void)initialization
 {
-    _selfWidth = self.frame.size.width;
-    _selfHeight = self.frame.size.height;
+    _selfWidth               = self.frame.size.width;
+    _selfHeight              = self.frame.size.height;
     
-    _maxSize = CGSizeMake(_selfWidth - 4, MAXFLOAT);//左右内边距2
+    _maxSize                 = CGSizeMake(_selfWidth - 4, MAXFLOAT);//左右内边距2
     
-    _showPageControl = YES;
+    _showPageControl         = YES;
     
-    _pageControlStyle = LVPageContolStyleCustom;
-    _currentPageDotColor = [UIColor whiteColor];
-    _pageDotColor = [UIColor lightGrayColor];
+    _pageControlStyle        = LVPageContolStyleCustom;
+    _currentPageDotColor     = [UIColor whiteColor];
+    _pageDotColor            = [UIColor lightGrayColor];
     
-    _pageControlDotSize = kPageControlDotSize;
+    _pageControlDotSize      = kPageControlDotSize;
     
-    _spacingBetweenDots = kSpacingBetweenDots;
+    _spacingBetweenDots      = kSpacingBetweenDots;
     _pageControlMarginOffset = kPageControlMarginOffset;
     _pageControlBottomOffset = kPageControlBottomOffset;
     
-    _currentPageDotAlpha = 1;
-    _pageDotAlpha = 1;
+    _currentPageDotAlpha     = 1;
+    _pageDotAlpha            = 1;
     
-    _isSetCornerRadius = NO;
+    _isSetCornerRadius       = NO;
     
-    _pageControlBorderColor = [UIColor clearColor];
-    _pageControlBorderWidth = 0.f;
+    _pageControlBorderColor  = [UIColor clearColor];
+    _pageControlBorderWidth  = 0.f;
     
-    _imageScrollType = LVImageScrollNone;
+    _imageScrollType         = LVImageScrollNone;
     
-    _anglePerItem = kAnglePerItem;
+    _anglePerItem            = kAnglePerItem;
     
-    _autoScroll = YES;
+    _autoScroll              = YES;
     
-    _autoScrollTimeInterval = kAutoScrollTimeInterval;
+    _autoScrollTimeInterval  = kAutoScrollTimeInterval;
     
-    _speed = kSpeed;
+    _speed                   = kSpeed;
     
-    _textBackgroundColor = kTextBackgroundColor;
-    _textFont = [UIFont systemFontOfSize:kTextFont];
-    _textColor = kTextColor;
-    _textLabelHeight = kTextLabelHeight;
+    _textBackgroundColor     = kTextBackgroundColor;
+    _textFont                = [UIFont systemFontOfSize:kTextFont];
+    _textColor               = kTextColor;
+    _textLabelHeight         = kTextLabelHeight;
     
-    _wanderingOffset = -1;
+    _wanderingOffset         = -1;
     
 }
 
@@ -144,13 +144,13 @@
         NSAssert(NO, @"该参数不能为zero");
     }
     LVCollectionViewLayout *layout = [[LVCollectionViewLayout alloc] init];
-    layout.scrollDirection = _scrollDirection;
-    layout.itemSize = _itemSize;
-    
-    _mainViewLayout = layout;
+    layout.scrollDirection         = _scrollDirection;
+    layout.itemSize                = _itemSize;
+    _mainViewLayout                = layout;
     
     CGFloat viewWidth = 0;
     CGFloat viewHeight = 0;
+    
     // 如果传进来的是CGRectZero,collectionView大小就用传进来的itemSize
     if (CGRectEqualToRect(CGRectZero, self.bounds)) {
         viewWidth = _itemSize.width;
@@ -177,19 +177,17 @@
         }
 
     }
-    _mainView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, viewWidth, viewHeight) collectionViewLayout:layout];
-    _mainView.backgroundColor = [UIColor clearColor];
-    _mainView.pagingEnabled = false;
+    _mainView                                = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, viewWidth, viewHeight) collectionViewLayout:layout];
+    _mainView.backgroundColor                = [UIColor clearColor];
+    _mainView.pagingEnabled                  = false;
     _mainView.showsHorizontalScrollIndicator = NO;
-    _mainView.showsVerticalScrollIndicator = NO;
+    _mainView.showsVerticalScrollIndicator   = NO;
+    _mainView.dataSource                     = self;
+    _mainView.delegate                       = self;
+    _mainView.scrollsToTop                   = NO;
     // 若不设置,竖直滚动,当collectionView的顶部超过导航栏底部,collectionView刚创建好的时候contentOffset.y会偏移
     _mainView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
     [_mainView registerClass:[LVCollectionViewCell class] forCellWithReuseIdentifier:NSStringFromClass([LVCollectionViewCell class])];
-//    [_mainView registerNib:[UINib nibWithNibName:NSStringFromClass([LVCollectionViewCell class]) bundle:nil] forCellWithReuseIdentifier:NSStringFromClass([LVCollectionViewCell class])];
-    
-    _mainView.dataSource = self;
-    _mainView.delegate = self;
-    _mainView.scrollsToTop = NO;
     [self addSubview:_mainView];
 
     
@@ -242,13 +240,13 @@
         }
     }
     if (!cell.hasConfigured) {
-        cell.hasConfigured = YES;
-        cell.scrollType = _scrollType;
-        cell.scrollDirection = _scrollDirection;
-        cell.textLabelTextFont = _textFont;
+        cell.hasConfigured      = YES;
+        cell.scrollType         = _scrollType;
+        cell.scrollDirection    = _scrollDirection;
+        cell.textLabelTextFont  = _textFont;
         cell.textLabelTextColor = _textColor;
         if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone) {
-            cell.backgroundColor = _textBackgroundColor;
+            cell.backgroundColor          = _textBackgroundColor;
             cell.textLabelBackgroundColor = [UIColor clearColor];
             if (self.textScrollMode == LVTextScrollModeThird) {
                 cell.isTextModeThird = YES;
@@ -256,11 +254,12 @@
             cell.textLabel.numberOfLines = 0;
         }else {
             cell.textLabelBackgroundColor = _textBackgroundColor;
-            cell.textLabel.numberOfLines = _textLabelNumberOfLines;
+            cell.textLabel.numberOfLines  = _textLabelNumberOfLines;
         }
         cell.textLabel.textAlignment = _textLabelTextAlignment;
-        cell.textLabelHeight = _textLabelHeight;
-        cell.cellCornerRadius = _cellCornerRadius;
+        cell.textLabelHeight         = _textLabelHeight;
+        cell.cellCornerRadius        = _cellCornerRadius;
+        cell.imageView.contentMode   = _imageContentMode;
     }
 
     return cell;
@@ -303,10 +302,10 @@
     
     if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
         TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        pageControl.currentPage = indexOnPageControl;
+        pageControl.currentPage    = indexOnPageControl;
     } else {
         UIPageControl *pageControl = (UIPageControl *)_pageControl;
-        pageControl.currentPage = indexOnPageControl;
+        pageControl.currentPage    = indexOnPageControl;
     }
 }
 
@@ -318,7 +317,7 @@
     }
     
     if (self.isScrollOnePage) {
-        NSInteger index = [self currentIndex];// 滑动前的当前页
+        NSInteger index              = [self currentIndex];// 滑动前的当前页
         _mainViewLayout.currentIndex = @(index);
     }
     
@@ -339,7 +338,7 @@
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
 {
     if (!self.dataSourceArr.count) return; // 解决清除timer时偶尔会出现的问题
-    NSInteger itemIndex = [self currentIndex];
+    NSInteger itemIndex    = [self currentIndex];
     int indexOnPageControl = [self pageControlIndexWithCurrentCellIndex:itemIndex];
     
     if ([self.delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)]) {
@@ -362,7 +361,7 @@
     
     if (_mainView.contentOffset.x == 0 &&  _totalItemsCount && self.infiniteLoop) {
         int targetIndex = _totalItemsCount * 0.5;
-        CGPoint offset = CGPointZero;
+        CGPoint offset  = CGPointZero;
         if (self.imageScrollType == LVImageScrollCardSeven) {
             CGFloat angleAtExtreme = (_totalItemsCount - 1) * self.anglePerItem;
             CGFloat factor;
@@ -390,7 +389,7 @@
     
     CGSize size = CGSizeZero;
     if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
+        TAPageControl *pageControl     = (TAPageControl *)_pageControl;
         pageControl.spacingBetweenDots = self.spacingBetweenDots;
         if (!(self.pageDotImage && self.currentPageDotImage && CGSizeEqualToSize(CGSizeMake(8, 8), self.pageControlDotSize))) {
             pageControl.dotSize = self.pageControlDotSize;
@@ -414,7 +413,7 @@
     }
     
     CGRect pageControlFrame = CGRectMake(x, y, size.width, size.height);
-    self.pageControl.frame = pageControlFrame;
+    self.pageControl.frame  = pageControlFrame;
     self.pageControl.hidden = !_showPageControl;
     
     if (self.scrollType == LVImageScroll && _titlesArray && !(_titlesArray.count == 1 || _titlesArray.count == _imagesArray.count)) {
@@ -443,25 +442,25 @@
         return 0;
     }
     
-    NSInteger index = 0;
+    NSInteger index     = 0;
     NSInteger cellCount = [self.mainView numberOfItemsInSection:0];
     
     if (_imageScrollType == LVImageScrollCardSeven) {
-        CGFloat anglePerItem = self.anglePerItem;
+        CGFloat anglePerItem   = self.anglePerItem;
         CGFloat angleAtExtreme = (cellCount - 1) * anglePerItem;
         CGFloat factor;
         // 默认停下来时，旋转的角度
         CGFloat proposedAngle;
         if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-            factor = angleAtExtreme / (self.mainView.contentSize.height - _selfHeight);
+            factor        = angleAtExtreme / (self.mainView.contentSize.height - _selfHeight);
             proposedAngle = factor * self.mainView.contentOffset.y;
 
         }else {
-            factor = angleAtExtreme / (self.mainView.contentSize.width - _selfWidth);
+            factor        = angleAtExtreme / (self.mainView.contentSize.width - _selfWidth);
             proposedAngle = factor * self.mainView.contentOffset.x;
         }
         CGFloat ratio = proposedAngle / anglePerItem;
-        index = roundf(ratio);
+        index         = roundf(ratio);
     }else {
         if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
             index = roundf((_mainView.contentOffset.y + _selfHeight / 2 - (_itemSize.height + self.space) / 2) / (_itemSize.height + self.space));
@@ -597,13 +596,13 @@
     [self.timer setFireDate:[NSDate dateWithTimeIntervalSinceNow:self.autoScrollTimeInterval + (self.scrollTime == 0 ? 0.3 : self.scrollTime)]];
     if (0 == _totalItemsCount) return;
     NSInteger currentIndex = [self currentIndex];
-    NSInteger targetIndex = currentIndex + 1;
+    NSInteger targetIndex  = currentIndex + 1;
     [self scrollToIndex:targetIndex];
 }
 
 - (void)scrollToIndex:(NSInteger)targetIndex
 {
-    CGPoint offset = CGPointZero;
+    CGPoint offset         = CGPointZero;
     CGFloat angleAtExtreme = (_totalItemsCount - 1) * self.anglePerItem;
     CGFloat factor;
     if (targetIndex >= _totalItemsCount) {
@@ -676,35 +675,35 @@
     switch (self.pageControlStyle) {
         case LVPageContolStyleClassic:
         {
-            UIPageControl *pageControl = [[UIPageControl alloc] init];
-            pageControl.numberOfPages = self.dataSourceArr.count;
+            UIPageControl *pageControl                = [[UIPageControl alloc] init];
+            pageControl.numberOfPages                 = self.dataSourceArr.count;
             pageControl.currentPageIndicatorTintColor = self.currentPageDotColor;
-            pageControl.pageIndicatorTintColor = self.pageDotColor;
-            pageControl.userInteractionEnabled = NO;
+            pageControl.pageIndicatorTintColor        = self.pageDotColor;
+            pageControl.userInteractionEnabled        = NO;
             [self addSubview:pageControl];
-            _pageControl = pageControl;
+            _pageControl                              = pageControl;
 
         }
             break;
 
         case LVPageContolStyleCustom:
         {
-            TAPageControl *pageControl = [[TAPageControl alloc] init];
-            pageControl.numberOfPages = self.dataSourceArr.count;
-            pageControl.pageDotColor = self.pageDotColor;
-            pageControl.currentPageDotColor = self.currentPageDotColor;
-            pageControl.currentPageDotAlpha = self.currentPageDotAlpha;
-            pageControl.pageDotAlpha = self.pageDotAlpha;
-            pageControl.borderColor = self.pageControlBorderColor;
-            pageControl.borderWidth = self.pageControlBorderWidth;
+            TAPageControl *pageControl         = [[TAPageControl alloc] init];
+            pageControl.numberOfPages          = self.dataSourceArr.count;
+            pageControl.pageDotColor           = self.pageDotColor;
+            pageControl.currentPageDotColor    = self.currentPageDotColor;
+            pageControl.currentPageDotAlpha    = self.currentPageDotAlpha;
+            pageControl.pageDotAlpha           = self.pageDotAlpha;
+            pageControl.borderColor            = self.pageControlBorderColor;
+            pageControl.borderWidth            = self.pageControlBorderWidth;
             if (self.isSetCornerRadius) {
-                pageControl.cornerRadius = self.pageControlCornerRadius;
+                pageControl.cornerRadius       = self.pageControlCornerRadius;
             }else {
-                pageControl.cornerRadius = self.pageControlDotSize.height / 2;
+                pageControl.cornerRadius       = self.pageControlDotSize.height / 2;
             }
             pageControl.userInteractionEnabled = NO;
             [self addSubview:pageControl];
-            _pageControl = pageControl;
+            _pageControl                       = pageControl;
         }
             break;
     }
@@ -715,15 +714,15 @@
     if (self.textScrollMode == LVTextScrollModeOne || self.textScrollMode == LVTextScrollModeFour) {
         if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
             self.textString = [self.titlesArray componentsJoinedByString:@"\n"];
-            self.textSize = [self heightWithString:self.textString font:self.textFont maxSize:self.maxSize];
+            self.textSize   = [self heightWithString:self.textString font:self.textFont maxSize:self.maxSize];
         }else {
             self.textString = [self.titlesArray componentsJoinedByString:@" "];
-            self.textSize = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width + 4;
+            self.textSize   = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width + 4;
         }
         
         if (self.textScrollMode == LVTextScrollModeOne) {
             NSString *totalText = self.textString;
-            CGFloat totalSize = self.textSize;
+            CGFloat totalSize   = self.textSize;
             while (totalSize - self.textSize < (self.scrollDirection == UICollectionViewScrollDirectionVertical ? _selfHeight : _selfWidth)) {
                 if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
                     totalText = [NSString stringWithFormat:@"%@\n%@",totalText,self.textString];
@@ -736,7 +735,7 @@
                 self.index ++;
             }
             self.textString = totalText;
-            self.textSize = totalSize;
+            self.textSize   = totalSize;
         }
     }else {
         self.textString = self.titlesArray.firstObject;
@@ -751,7 +750,7 @@
 - (CGFloat)heightWithString:(NSString *)str font:(UIFont *)font maxSize:(CGSize)maxSize
 {
     NSDictionary *dict = @{NSFontAttributeName: font};
-    CGSize textSize = [str boundingRectWithSize:maxSize options:NSStringDrawingUsesLineFragmentOrigin attributes:dict context:nil].size;
+    CGSize textSize    = [str boundingRectWithSize:maxSize options:NSStringDrawingUsesLineFragmentOrigin attributes:dict context:nil].size;
     return textSize.height + 4;
 }
 

@@ -24,14 +24,14 @@ NS_ASSUME_NONNULL_BEGIN
 图片滚动的样式
 */
 typedef enum {
-    LVImageScrollNone,      // 普通,无滚动特效
-    LVImageScrollCardOne,   // 卡片样式1,随滑动缩放的特效,默认两个cell间缩放比80%,以cell的中心缩放,可通过zoomScale改变缩放比
-    LVImageScrollCardTwo,   // 卡片样式2,随滑动缩放的特效,默认两个cell间缩放比80%,只缩小80%宽度或高度,不过每个cell的间隔相同,默认为0,可通过space属性修改间隔
-    LVImageScrollCardThird, // 卡片样式3,随滑动缩放的特效,默认两个cell间缩放比80%,只缩小80%宽度或高度,中间为原始宽度度或高度,中心不变
-    LVImageScrollCardFour,  // 卡片样式4,随滑动缩放的特效,默认两个cell间缩放比80%,只缩小80%宽度或高度,中间为原始宽度度或高度,底部或左边对齐中间的cell
-    LVImageScrollCardFive,  // 卡片样式5,以cell为中心旋转,默认两个cell之间旋转度数为45°,也就是M_PI_4
-    LVImageScrollCardSix,   // 卡片样式6,三维特效,随滑动图片绕x轴旋转特效,默认旋转最大度数45°,也就是M_PI_4
-    LVImageScrollCardSeven, // 卡片样式7,圆形旋转,随滑动绕collectionView外的某点旋转,这个点就是瞄点,位置为anchorPoint;cell的center到这个点的连线到相邻cell的center到这个点连线的夹角angle
+    LVImageScrollNone,
+    LVImageScrollCardOne,
+    LVImageScrollCardTwo,
+    LVImageScrollCardThird,
+    LVImageScrollCardFour,
+    LVImageScrollCardFive,
+    LVImageScrollCardSix,
+    LVImageScrollCardSeven,
 }LVImageScrollType;
 
 
