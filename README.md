@@ -16,12 +16,13 @@ LVCycleScrollView
 
 安装
 ==============
-##使用CocoaPods安装
+
+## 使用CocoaPods安装
 ```
 pod 'LVCycleScrollView'
 ```
 
-##手动安装
+## 手动安装
 直接拉取代码,把`LVCycleScrollView`文件夹拉到项目工程即可
 
 用法
@@ -318,6 +319,33 @@ PageControl属性
 
 /// 其他分页控件小圆标图片,默认为空,如果设置优先显示,上面的7个自定义样式分页控件属性则无效
 @property (nonatomic, strong) UIImage *pageDotImage;
+```
+
+共有方法
+==============
+
+```
+/// 启动定时器
+- (void)move;
+
+/// 停止计时器
+- (void)stop;
+
+/// 滚动手势禁用,只适用于除图片滚动,无样式的文字滚动,因为有样式的图片滚动默认禁止手势
+- (void)disableScrollGesture;
+
+/// 可以调用此方法手动控制滚动到哪一个index
+- (void)makeScrollViewScrollToIndex:(NSInteger)index;
+```
+
+代理方法
+==============
+```
+/// 点击回调,文字滚动样式1和4回调都是0
+- (void)cycleScrollView:(LVCycleScrollView *)cycleScrollView didSelectItemAtIndex:(NSInteger)index;
+
+/// 滚动回调,文字滚动样式1和4回调都是0
+- (void)cycleScrollView:(LVCycleScrollView *)cycleScrollView didScrollToIndex:(NSInteger)index;
 ```
 
 最后
