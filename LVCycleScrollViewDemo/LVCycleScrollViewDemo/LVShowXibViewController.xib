@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="19162" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="19144"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="LVShowXibViewController">
+            <connections>
+                <outlet property="cycleView" destination="fHP-sU-9Zh" id="JUI-od-mAS"/>
+                <outlet property="textCycleView" destination="cqt-fa-0uv" id="4JB-KC-vXz"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fHP-sU-9Zh" customClass="LVCycleScrollView">
+                    <rect key="frame" x="0.0" y="44" width="414" height="200"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="200" id="PaK-3b-6dx"/>
+                    </constraints>
+                </view>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="cqt-fa-0uv" customClass="LVCycleScrollView">
+                    <rect key="frame" x="0.0" y="254" width="414" height="40"/>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="40" id="VWG-Js-sTJ"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="Q5M-cg-NOt"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="fHP-sU-9Zh" firstAttribute="top" secondItem="Q5M-cg-NOt" secondAttribute="top" id="1V8-HT-nSu"/>
+                <constraint firstItem="cqt-fa-0uv" firstAttribute="top" secondItem="fHP-sU-9Zh" secondAttribute="bottom" constant="10" id="IYg-3e-eZF"/>
+                <constraint firstAttribute="trailing" secondItem="fHP-sU-9Zh" secondAttribute="trailing" id="NEE-B6-RLw"/>
+                <constraint firstItem="fHP-sU-9Zh" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="OIM-ph-XVz"/>
+                <constraint firstItem="cqt-fa-0uv" firstAttribute="leading" secondItem="Q5M-cg-NOt" secondAttribute="leading" id="XdP-Ez-RJB"/>
+                <constraint firstItem="Q5M-cg-NOt" firstAttribute="trailing" secondItem="cqt-fa-0uv" secondAttribute="trailing" id="uj1-Cr-d7D"/>
+            </constraints>
+            <point key="canvasLocation" x="139" y="154"/>
+        </view>
+    </objects>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

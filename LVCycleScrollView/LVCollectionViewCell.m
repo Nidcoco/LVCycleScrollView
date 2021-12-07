@@ -26,7 +26,7 @@
     // 不设置,改变UICollectionViewLayoutAttributes里面的frame,首个和最后一个图片大小不会随着cell的大小发生变化
     _imageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
-    _textLabel = [[LVLabel alloc] init];
+    _textLabel = [[UILabel alloc] init];
     _textLabel.hidden = YES;
     [self.contentView addSubview:_textLabel];
 }
@@ -35,28 +35,14 @@
 {
     [super layoutSubviews];
     
-    if (self.scrollType == LVOnlyTextScroll) {
-        if (self.isTextModeThird) {
-            if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-                _textLabel.frame = CGRectMake(0, CGRectGetHeight(self.contentView.bounds), CGRectGetWidth(self.contentView.bounds), CGRectGetHeight(self.contentView.bounds));
-            }else {
-                _textLabel.frame = CGRectMake(CGRectGetWidth(self.contentView.bounds), 0, CGRectGetWidth(self.contentView.bounds), CGRectGetHeight(self.contentView.bounds));
-            }
-        }else {
-            _textLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.contentView.bounds), CGRectGetHeight(self.contentView.bounds));
-        }
+    if (self.isOnlyText) {
+        _textLabel.frame = CGRectMake(0, 0, CGRectGetWidth(self.contentView.bounds), CGRectGetHeight(self.contentView.bounds));
     } else {
         CGFloat textLabelW = CGRectGetWidth(self.contentView.bounds);
         CGFloat textLabelH = self.textLabelHeight;
         CGFloat textLabelX = 0;
         CGFloat textLabelY = CGRectGetHeight(self.contentView.bounds) - textLabelH;
         _textLabel.frame = CGRectMake(textLabelX, textLabelY, textLabelW, textLabelH);
-        
-        // 图片竖直滚动要隐藏文字
-        if (self.scrollDirection == UICollectionViewScrollDirectionVertical && !_textLabel.isHidden) {
-            _textLabel.hidden = YES;
-        }
-        
     }
     
 }

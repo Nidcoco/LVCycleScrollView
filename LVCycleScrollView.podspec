@@ -9,11 +9,11 @@
 Pod::Spec.new do |spec|
 
   spec.name         = "LVCycleScrollView"
-  spec.version      = "0.0.9"
-  spec.summary      = "图片及文字自动滚动的控件."
+  spec.version      = "1.0.0"
+  spec.summary      = "banner控件."
 
   spec.description  = <<-DESC
-                        图片及文字自动滚动的控件,详细见README
+                          banner控件,详细见README
                    DESC
 
   spec.homepage     = "https://github.com/li199508/LVCycleScrollView"
@@ -22,7 +22,7 @@ Pod::Spec.new do |spec|
 
   spec.author             = { "Levi" => "2387356991@qq.com" }
   
-  spec.source       = { :git => "https://github.com/li199508/LVCycleScrollView.git", :tag => "0.0.9" }
+  spec.source       = { :git => "https://github.com/li199508/LVCycleScrollView.git", :tag => "1.0.0" }
 
 
   spec.source_files  = "LVCycleScrollView/**/*.{h,m}"

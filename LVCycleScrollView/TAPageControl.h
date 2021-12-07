@@ -72,27 +72,12 @@
 
 
 /**
- *  Hide the control if there is only one page. Default is NO.
- */
-@property (nonatomic) BOOL hidesForSinglePage;
-
-
-/**
  *  Let the control know if should grow bigger by keeping center, or just get longer (right side expanding). By default YES.
  */
 @property (nonatomic) BOOL shouldResizeFromCenter;
 
 
 /*--------------------------- 新增属性 ----------------------------*/
-/**
- * 图标阴影颜色
- */
-@property (nonatomic, strong) UIColor *borderColor;
-
-/**
- * 图标阴影大小
- */
-@property (nonatomic, assign) CGFloat borderWidth;
 
 /**
  * 图标圆角
@@ -102,33 +87,33 @@
 /**
  * 当前分页控件小圆标颜色,默认白色
  */
-@property (nonatomic, strong) UIColor *currentPageDotColor;
+@property (nonatomic, strong) UIColor *currentPointDotColor;
 
 /**
  * 其他分页控件小圆标颜色,默认灰色
  */
-@property (nonatomic, strong) UIColor *pageDotColor;
+@property (nonatomic, strong) UIColor *pointDotColor;
 
 /**
  * 当前分页控件小圆标透明度,默认1
  */
-@property (nonatomic, assign) CGFloat currentPageDotAlpha;
+@property (nonatomic, assign) CGFloat currentPointDotAlpha;
 
 /**
  * 其他分页控件小圆标透明度,默认1
  */
-@property (nonatomic, assign) CGFloat pageDotAlpha;
+@property (nonatomic, assign) CGFloat pointDotAlpha;
 
 
 /**
  * 旋转角度
  */
-@property (nonatomic, assign) CGFloat pageControlRotationAngle;
+@property (nonatomic, assign) CGFloat pointRotationAngle;
 
 /**
  * 缩放大小
  */
-@property (nonatomic, assign) CGFloat pageControlZoomSize;
+@property (nonatomic, assign) CGFloat pointZoomSize;
 
 /**
  *  Return the minimum size required to display control properly for the given page count.
