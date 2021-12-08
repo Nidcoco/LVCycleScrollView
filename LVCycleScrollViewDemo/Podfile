@@ -1,6 +1,6 @@
 platform :ios, '9.0'
 inhibit_all_warnings!
 target 'LVCycleScrollViewDemo' do
-  pod 'LVCycleScrollView', '~> 1.0.0'
+  pod 'LVCycleScrollView'
   pod 'Masonry'
 end

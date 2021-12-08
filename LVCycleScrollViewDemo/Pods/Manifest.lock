@@ -7,7 +7,7 @@ PODS:
   - SDWebImage/Core (5.12.1)
 
 DEPENDENCIES:
-  - LVCycleScrollView (~> 1.0.0)
+  - LVCycleScrollView
   - Masonry
 
 SPEC REPOS:
@@ -21,6 +21,6 @@ SPEC CHECKSUMS:
   Masonry: 678fab65091a9290e40e2832a55e7ab731aad201
   SDWebImage: 4dc3e42d9ec0c1028b960a33ac6b637bb432207b
 
-PODFILE CHECKSUM: 89f0d2d2e5f88f2fc746fbdf144a9dec251639c6
+PODFILE CHECKSUM: aee1f85f3f3e751f4fb05da424289b9c2f19cc93
 
 COCOAPODS: 1.10.2
