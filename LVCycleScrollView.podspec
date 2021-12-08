@@ -9,7 +9,7 @@
 Pod::Spec.new do |spec|
 
   spec.name         = "LVCycleScrollView"
-  spec.version      = "1.0.1"
+  spec.version      = "1.0.2"
   spec.summary      = "banner控件."
 
   spec.description  = <<-DESC
@@ -22,7 +22,7 @@ Pod::Spec.new do |spec|
 
   spec.author             = { "Levi" => "2387356991@qq.com" }
   
-  spec.source       = { :git => "https://github.com/li199508/LVCycleScrollView.git", :tag => "1.0.1" }
+  spec.source       = { :git => "https://github.com/li199508/LVCycleScrollView.git", :tag => "1.0.2" }
 
 
   spec.source_files  = "LVCycleScrollView/**/*.{h,m}"
