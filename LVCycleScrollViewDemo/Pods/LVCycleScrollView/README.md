@@ -10,7 +10,7 @@ LVCycleScrollView
 
 介绍
 ==============
-这是一个图片及文字自动轮播的控件,由于本人是个的小菜鸟,所以这个依赖库都是看别人的,主体代码是参考[SDCycleScrollView](https://github.com/gsdios/SDCycleScrollView),图片滚轮样式是参考这篇博客[UICollectionView自定义布局](https://juejin.im/post/5a320ea36fb9a0452405d8bb),文字水平滚动是参考[LMJHorizontalScrollText](https://github.com/JerryLMJ/LMJHorizontalScrollText),自定义的UICollectionViewLayout是跟[HJCarouselDemo](https://github.com/panghaijiao/HJCarouselDemo)学习的,本人现阶段能力有限,代码比较混乱,累赘,看不惯的兄弟可以使用上面的`SDCycleScrollView`
+这是一个图片及文字自动轮播的控件,由于本人是个的小菜鸟,所以这个第三方库都是看别人的,主体代码是参考[SDCycleScrollView](https://github.com/gsdios/SDCycleScrollView),图片滚轮样式是参考这篇博客[UICollectionView自定义布局](https://juejin.im/post/5a320ea36fb9a0452405d8bb),文字水平滚动是参考[LMJHorizontalScrollText](https://github.com/JerryLMJ/LMJHorizontalScrollText),自定义的UICollectionViewLayout是跟[HJCarouselDemo](https://github.com/panghaijiao/HJCarouselDemo)学习的,本人现阶段能力有限,代码比较混乱,累赘,看不惯的兄弟可以使用上面的`SDCycleScrollView`
 
 控件整体是由一个UICollectionView组成,由于是自定义的UICollectionViewLayout,所以形成了各种滚动的样式,而文字的滚动除了无样式的是滚动的是整个cell,其他只是在第0个cell定时修改文字label的x或y来改变文字的位置,以达到文字好像在滚动的效果
 
@@ -351,4 +351,4 @@ PageControl属性
 最后
 ==============
 
-第一次搞依赖库,可能还存在有bug,代码也有点烂,有问题发我邮箱2387356991@qq.com,觉得还可以的兄弟麻烦给小弟一个✨✨,感激不尽
+第一次搞第三方库,可能还存在有bug,代码也有点烂,有问题发我邮箱2387356991@qq.com,觉得还可以的兄弟麻烦给小弟一个✨✨,感激不尽

@@ -10,9 +10,8 @@
 #import "LVCollectionViewCell.h"
 #import "TAPageControl.h"
 #import <SDWebImage/SDWebImage.h>
-#import "LVProxy.h"
 
-#define kPageControlDotSize CGSizeMake(8, 8)
+#define kPointDotSize CGSizeMake(8, 8)
 
 #define UIColorFromHexWithAlpha(hexValue,a) [UIColor colorWithRed:((float)((hexValue & 0xFF0000) >> 16))/255.0 green:((float)((hexValue & 0xFF00) >> 8))/255.0 blue:((float)(hexValue & 0xFF))/255.0 alpha:a]
 
@@ -24,8 +23,6 @@
 
 #define kTextLabelHeight 28
 
-#define kSpeed (_scrollDirection == UICollectionViewScrollDirectionVertical ? 0.1 : 0.02)
-
 #define kSpacingBetweenDots 8
 
 #define kPageControlMarginOffset 10
@@ -34,6 +31,10 @@
 
 #define kAutoScrollTimeInterval 2.0
 
+#define _selfWidth self.frame.size.width
+
+#define _selfHeight self.frame.size.height
+
 @interface LVCycleScrollView ()<UICollectionViewDataSource, UICollectionViewDelegate>
 
 /// mainView的bound和self的bound一样
@@ -41,83 +42,63 @@
 
 @property (nonatomic, strong) NSArray *dataSourceArr;
 
-@property (nonatomic, copy) NSString *textString;
-
-@property (nonatomic, assign) CGFloat textSize;
-
-@property (nonatomic, assign) CGSize maxSize;
-
 @property (nonatomic, assign) NSInteger index;
 
 @property (nonatomic, assign) int wanderingOffset;
 
-@property (nonatomic, weak) UIControl *pageControl;
+@property (nonatomic, weak) TAPageControl *pageControl;
 
-@property (nonatomic, strong) NSTimer * timer;
-
-/// 是否调用了setPageControlCornerRadius方法
-@property (nonatomic, assign) BOOL isSetCornerRadius;
+@property (strong, nonatomic) dispatch_source_t timer;
 
 @property (nonatomic, weak) LVCollectionViewLayout *mainViewLayout;
-
-/// 滚动类型
-@property (nonatomic, assign) LVScrollType scrollType;
-
-/// 滚动方式
-@property (nonatomic, assign) UICollectionViewScrollDirection scrollDirection;
 
 
 @end
 
 @implementation LVCycleScrollView
 {
-    CGFloat _selfWidth;
-    CGFloat _selfHeight;
-    CGSize _itemSize;
-    NSInteger _totalItemsCount;
+    NSUInteger _totalItemsCount;
+    BOOL _isSetCenter;
+    BOOL _isSetPointCornerRadius;
+    NSInteger _preIndex;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
-                     itemSize:(CGSize)itemSize
-                   scrollType:(LVScrollType)scrollType
-              scrollDirection:(UICollectionViewScrollDirection)scrollDirection
 {
     if (self = [super initWithFrame:frame]) {
-        _itemSize = itemSize;
-        _scrollDirection = scrollDirection;
-        _scrollType = scrollType;
         [self initialization];
-        [self setupMainView];
+        [self addSubview:self.mainView];
     }
     return self;
 }
 
+- (void)awakeFromNib
+{
+    [super awakeFromNib];
+    [self initialization];
+    [self addSubview:self.mainView];
+}
+
+// 初始化
 - (void)initialization
 {
-    _selfWidth               = self.frame.size.width;
-    _selfHeight              = self.frame.size.height;
-    
-    _maxSize                 = CGSizeMake(_selfWidth - 4, MAXFLOAT);//左右内边距2
+    _scrollDirection         = UICollectionViewScrollDirectionHorizontal;// 默认横向滚动
     
     _showPageControl         = YES;
     
-    _pageControlStyle        = LVPageContolStyleCustom;
-    _currentPageDotColor     = [UIColor whiteColor];
-    _pageDotColor            = [UIColor lightGrayColor];
+    _currentPointDotColor    = [UIColor whiteColor];
+    _pointDotColor           = [UIColor lightGrayColor];
     
-    _pageControlDotSize      = kPageControlDotSize;
+    _pointDotSize            = kPointDotSize;
     
     _spacingBetweenDots      = kSpacingBetweenDots;
     _pageControlMarginOffset = kPageControlMarginOffset;
     _pageControlBottomOffset = kPageControlBottomOffset;
     
-    _currentPageDotAlpha     = 1;
-    _pageDotAlpha            = 1;
+    _currentPointDotAlpha    = 1;
+    _pointDotAlpha           = 1;
     
-    _isSetCornerRadius       = NO;
-    
-    _pageControlBorderColor  = [UIColor clearColor];
-    _pageControlBorderWidth  = 0.f;
+    _pointZoomSize           = 1;
     
     _imageScrollType         = LVImageScrollNone;
     
@@ -126,8 +107,6 @@
     _autoScroll              = YES;
     
     _autoScrollTimeInterval  = kAutoScrollTimeInterval;
-    
-    _speed                   = kSpeed;
     
     _textBackgroundColor     = kTextBackgroundColor;
     _textFont                = [UIFont systemFontOfSize:kTextFont];
@@ -138,67 +117,9 @@
     
 }
 
-- (void)setupMainView
-{
-    if (CGSizeEqualToSize(CGSizeZero, _itemSize)) {
-        NSAssert(NO, @"该参数不能为zero");
-    }
-    LVCollectionViewLayout *layout = [[LVCollectionViewLayout alloc] init];
-    layout.scrollDirection         = _scrollDirection;
-    layout.itemSize                = _itemSize;
-    _mainViewLayout                = layout;
-    
-    CGFloat viewWidth = 0;
-    CGFloat viewHeight = 0;
-    
-    // 如果传进来的是CGRectZero,collectionView大小就用传进来的itemSize
-    if (CGRectEqualToRect(CGRectZero, self.bounds)) {
-        viewWidth = _itemSize.width;
-        viewHeight = _itemSize.height;
-    }else {
-        // 竖直滑动的时候,如果设置的collectionView的宽度小于cell的宽度,则collectionView的宽度等于cell的宽度,保证不会遮挡cell
-        if (_scrollDirection == UICollectionViewScrollDirectionVertical) {
-            if (self.bounds.size.width < _itemSize.width) {
-                viewWidth = _itemSize.width;
-                viewHeight = self.bounds.size.height;
-            }else {
-                viewWidth = self.bounds.size.width;
-                viewHeight = self.bounds.size.height;
-            }
-        }else {
-            // 水平滑动的时候,如果设置的collectionView的高度小于cell的高度,则collectionView的宽度等于cell的高度
-            if (self.bounds.size.height < _itemSize.height) {
-                viewHeight = _itemSize.height;
-                viewWidth = self.bounds.size.width;
-            }else {
-                viewHeight = self.bounds.size.height;
-                viewWidth = self.bounds.size.width;
-            }
-        }
-
-    }
-    _mainView                                = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, viewWidth, viewHeight) collectionViewLayout:layout];
-    _mainView.backgroundColor                = [UIColor clearColor];
-    _mainView.pagingEnabled                  = false;
-    _mainView.showsHorizontalScrollIndicator = NO;
-    _mainView.showsVerticalScrollIndicator   = NO;
-    _mainView.dataSource                     = self;
-    _mainView.delegate                       = self;
-    _mainView.scrollsToTop                   = NO;
-    // 若不设置,竖直滚动,当collectionView的顶部超过导航栏底部,collectionView刚创建好的时候contentOffset.y会偏移
-    _mainView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
-    [_mainView registerClass:[LVCollectionViewCell class] forCellWithReuseIdentifier:NSStringFromClass([LVCollectionViewCell class])];
-    [self addSubview:_mainView];
-
-    
-}
-
 #pragma mark - Delegate
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
-    if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone) {
-        return 1;
-    }
     return _totalItemsCount;
 }
 
@@ -206,60 +127,48 @@
     LVCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:NSStringFromClass([LVCollectionViewCell class]) forIndexPath:indexPath];
     int indexOnPageControl = [self pageControlIndexWithCurrentCellIndex:indexPath.row];
 
-    if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone && _titlesArray) {
-        [self calculateAction];
-        cell.text = self.textString;
-        [self setupTextTimer];
-        
-    }else {
+    if (self.imagesArray.count) {
         NSString *imagePath = self.dataSourceArr[indexOnPageControl];
-        if (self.scrollType == LVImageScroll && [imagePath isKindOfClass:[NSString class]]) {
+        if ([imagePath isKindOfClass:[NSString class]]) {
             if ([imagePath hasPrefix:@"http"]) {
                 if (self.placeholderImage) {
                     [cell.imageView sd_setImageWithURL:[NSURL URLWithString:imagePath] placeholderImage:self.placeholderImage];
-                }else {
+                } else {
                     [cell.imageView sd_setImageWithURL:[NSURL URLWithString:imagePath]];
                 }
-            }else {
+            } else {
                 UIImage *image = [UIImage imageNamed:imagePath];
                 if (!image) {
                     image = [UIImage imageWithContentsOfFile:imagePath];
                 }
                 cell.imageView.image = image;
             }
-        }else if (self.scrollType == LVImageScroll && [imagePath isKindOfClass:[UIImage class]]) {
+        } else if ([imagePath isKindOfClass:[UIImage class]]) {
             cell.imageView.image = (UIImage *)imagePath;
         }
-        
-        if (_titlesArray.count) {
-            if (self.scrollType == LVImageScroll && _titlesArray.count == 1) {
-                cell.text = _titlesArray.firstObject;
-            }else {
-                cell.text = _titlesArray[indexOnPageControl];
-            }
-        }
     }
+
+        
+    if (_titlesArray.count) {
+        cell.text = indexOnPageControl >= _titlesArray.count ? @"" : _titlesArray[indexOnPageControl]; // 图片比个文字多
+    }
+    
     if (!cell.hasConfigured) {
         cell.hasConfigured      = YES;
-        cell.scrollType         = _scrollType;
-        cell.scrollDirection    = _scrollDirection;
         cell.textLabelTextFont  = _textFont;
         cell.textLabelTextColor = _textColor;
-        if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone) {
-            cell.backgroundColor          = _textBackgroundColor;
-            cell.textLabelBackgroundColor = [UIColor clearColor];
-            if (self.textScrollMode == LVTextScrollModeThird) {
-                cell.isTextModeThird = YES;
-            }
-            cell.textLabel.numberOfLines = 0;
-        }else {
-            cell.textLabelBackgroundColor = _textBackgroundColor;
-            cell.textLabel.numberOfLines  = _textLabelNumberOfLines;
-        }
+        
+        cell.textLabelBackgroundColor = _textBackgroundColor;
+        cell.textLabel.numberOfLines  = _textLabelNumberOfLines;
+        
         cell.textLabel.textAlignment = _textLabelTextAlignment;
         cell.textLabelHeight         = _textLabelHeight;
         cell.cellCornerRadius        = _cellCornerRadius;
         cell.imageView.contentMode   = _imageContentMode;
+        if (_titlesArray.count && !_imagesArray.count) {
+            cell.isOnlyText = YES;
+        }
+        
     }
 
     return cell;
@@ -268,45 +177,42 @@
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
     if ([self.delegate respondsToSelector:@selector(cycleScrollView:didSelectItemAtIndex:)]) {
-        if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone) {
-            if (self.textScrollMode == LVTextScrollModeOne) {
-                [self.delegate cycleScrollView:self didSelectItemAtIndex:0];
-            }else {
-                [self.delegate cycleScrollView:self didSelectItemAtIndex:self.index];
-            }
-        }else {
-            [self.delegate cycleScrollView:self didSelectItemAtIndex:[self pageControlIndexWithCurrentCellIndex:indexPath.row]];
-        }
+        [self.delegate cycleScrollView:self didSelectItemAtIndex:[self pageControlIndexWithCurrentCellIndex:indexPath.row]];
     }
     if (self.clickItemOperationBlock) {
-        if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone) {
-            if (self.textScrollMode == LVTextScrollModeOne) {
-                self.clickItemOperationBlock(0);
-            }else {
-                self.clickItemOperationBlock(self.index);
-            }
-        }else {
-            self.clickItemOperationBlock([self pageControlIndexWithCurrentCellIndex:indexPath.row]);
-        }
+        self.clickItemOperationBlock([self pageControlIndexWithCurrentCellIndex:indexPath.row]);
     }
-    if (self.scrollType == LVImageScroll && self.isTouchScrollToIndex) {
+    if (self.isTouchScrollToIndex) {
         [self makeScrollViewScrollToIndex:indexPath.row];
     }
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
+    if ([self.delegate respondsToSelector:@selector(cycleScrollViewDidScroll:)]) {
+        [self.delegate cycleScrollViewDidScroll:scrollView];
+    }
+    
+    if (!self.dataSourceArr.count) return;
+    
     NSInteger itemIndex = [self currentIndex];
     
-    int indexOnPageControl = [self pageControlIndexWithCurrentCellIndex:itemIndex];
-    
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        pageControl.currentPage    = indexOnPageControl;
-    } else {
-        UIPageControl *pageControl = (UIPageControl *)_pageControl;
-        pageControl.currentPage    = indexOnPageControl;
+    if (itemIndex == _preIndex) { // 减少调用次数
+        return;
     }
+    
+    _preIndex = itemIndex;
+    
+    int indexOnPageControl = [self pageControlIndexWithCurrentCellIndex:itemIndex];
+    _pageControl.currentPage    = indexOnPageControl;
+    
+    if ([self.delegate respondsToSelector:@selector(cycleScrollView:willDidScrollToIndex:)]) {
+        [self.delegate cycleScrollView:self willDidScrollToIndex:indexOnPageControl];
+    }
+    if (self.itemWillDidScrollOperationBlock) {
+        self.itemWillDidScrollOperationBlock(indexOnPageControl);
+    }
+
 }
 
 // 开始拖拽
@@ -326,7 +232,7 @@
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
     if (self.autoScroll) {
-        [self setupImageTimer];
+        [self setupTimer];
     }
 }
 
@@ -340,7 +246,7 @@
     if (!self.dataSourceArr.count) return; // 解决清除timer时偶尔会出现的问题
     NSInteger itemIndex    = [self currentIndex];
     int indexOnPageControl = [self pageControlIndexWithCurrentCellIndex:itemIndex];
-    
+
     if ([self.delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)]) {
         [self.delegate cycleScrollView:self didScrollToIndex:indexOnPageControl];
     }
@@ -355,83 +261,30 @@
 
 - (void)layoutSubviews
 {
-    self.delegate = self.delegate;
-
+    
     [super layoutSubviews];
     
-    if (_mainView.contentOffset.x == 0 &&  _totalItemsCount && self.infiniteLoop) {
-        int targetIndex = _totalItemsCount * 0.5;
-        CGPoint offset  = CGPointZero;
-        if (self.imageScrollType == LVImageScrollCardSeven) {
-            CGFloat angleAtExtreme = (_totalItemsCount - 1) * self.anglePerItem;
-            CGFloat factor;
-            if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-                factor = angleAtExtreme / (_totalItemsCount * _itemSize.height);
-                offset = CGPointMake(0, targetIndex * self.anglePerItem / factor);
-            }else {
-                factor = angleAtExtreme / (_totalItemsCount * _itemSize.width);
-                offset = CGPointMake(targetIndex * self.anglePerItem / factor, 0);
-            }
-            // 这里获取的self.mainView.contentSize.width为0,应该是collectionView的布局还没完全计算出来,可以在下面设置数据源的时候reload之后再加上layoutIfNeeded,但是此时除了图片滚动样式7,其他样式如果设置了无限循环轮播还是会从第0行开始,就是下面的[weakSelf.mainView setContentOffset:offset animated:NO];会失效,所以这里我直接手动计算出来,因为layout类里面有写,直接用过来就行了
-        }else {
-            if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-                offset = CGPointMake(0, -(_selfHeight - (_itemSize.height + self.space)) / 2 + targetIndex * (_itemSize.height + self.space));
-            }else {
-                offset = CGPointMake(-(_selfWidth - (_itemSize.width + self.space)) / 2 + targetIndex * (_itemSize.width + self.space), 0);
-            }
-        }
-        __weak typeof(self) weakSelf = self;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf.mainView setContentOffset:offset animated:NO];
-        });
+    if (!CGRectEqualToRect(self.mainView.bounds, self.bounds)) {
+        self.mainView.frame = self.bounds;
+    }
+    
+    if (CGSizeEqualToSize(CGSizeZero, _itemSize)) {
+        _itemSize = CGSizeMake(_selfWidth, _selfHeight);
+        _mainViewLayout.itemSize = _itemSize;
+    }
+    
+    // 无限滚动要重新设置ContentOffset
+    [self setContentOffsetCenter];
+    
+    [self setupPageControl];
+    
+    // 启动定时器
+    [self setupTimer];
 
-    }
-    
-    CGSize size = CGSizeZero;
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl     = (TAPageControl *)_pageControl;
-        pageControl.spacingBetweenDots = self.spacingBetweenDots;
-        if (!(self.pageDotImage && self.currentPageDotImage && CGSizeEqualToSize(CGSizeMake(8, 8), self.pageControlDotSize))) {
-            pageControl.dotSize = self.pageControlDotSize;
-        }
-        size = [pageControl sizeForNumberOfPages:self.dataSourceArr.count];
-    } else {
-        size = CGSizeMake(self.dataSourceArr.count * 7 * 1.5, 7);
-    }
-    
-    CGFloat x = (_selfWidth - size.width) * 0.5;
-    if (self.pageControlAliment == LVPageControlLeft) {
-        x = self.pageControlMarginOffset;
-    }else if (self.pageControlAliment == LVPageControlRight) {
-        x = _selfWidth - size.width - self.pageControlMarginOffset;
-    }
-    CGFloat y = self.mainView.frame.size.height - size.height - self.pageControlBottomOffset;
-    
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        [pageControl sizeToFit];
-    }
-    
-    CGRect pageControlFrame = CGRectMake(x, y, size.width, size.height);
-    self.pageControl.frame  = pageControlFrame;
-    self.pageControl.hidden = !_showPageControl;
-    
-    if (self.scrollType == LVImageScroll && _titlesArray && !(_titlesArray.count == 1 || _titlesArray.count == _imagesArray.count)) {
-        NSAssert(NO, @"titlesArray不等于1,并且与imagesArray数组数量不相同");
-    }
-    
-    if ([self.delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)]) {
-        [self.delegate cycleScrollView:self didScrollToIndex:0];
-    }
-    
-    if (self.itemDidScrollOperationBlock) {
-        self.itemDidScrollOperationBlock(0);
-    }
-    
 }
 
 - (void)dealloc {
-    [self.timer invalidate];
+    [self invalidateTimer];
 }
 
 #pragma mark - 私有方法
@@ -455,16 +308,16 @@
             factor        = angleAtExtreme / (self.mainView.contentSize.height - _selfHeight);
             proposedAngle = factor * self.mainView.contentOffset.y;
 
-        }else {
+        } else {
             factor        = angleAtExtreme / (self.mainView.contentSize.width - _selfWidth);
             proposedAngle = factor * self.mainView.contentOffset.x;
         }
         CGFloat ratio = proposedAngle / anglePerItem;
         index         = roundf(ratio);
-    }else {
+    } else {
         if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
             index = roundf((_mainView.contentOffset.y + _selfHeight / 2 - (_itemSize.height + self.space) / 2) / (_itemSize.height + self.space));
-        }else {
+        } else {
             index = roundf((_mainView.contentOffset.x + _selfWidth / 2 - (_itemSize.width + self.space) / 2) / (_itemSize.width + self.space));
         }
     }
@@ -479,121 +332,38 @@
 
 - (int)pageControlIndexWithCurrentCellIndex:(NSInteger)index
 {
+    if (self.dataSourceArr.count == 0) {
+        return 0;
+    }
     return (int)index % self.dataSourceArr.count;
 }
 
-// 图片及无样式文字滚动
-- (void)setupImageTimer
+// 创建GCD定时器
+- (void)setupTimer
 {
-    [self invalidateTimer]; // 创建定时器前先停止定时器，不然会出现僵尸定时器，导致轮播频率错误
+    [self invalidateTimer];
     
-    LVProxy *proxy = [[LVProxy alloc] initWithObjc:self];
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.autoScrollTimeInterval target:proxy selector:@selector(automaticScroll) userInfo:nil repeats:YES];
-    [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
-
-}
-
-// 有样式的文字滚动
-- (void)setupTextTimer
-{
-    [self invalidateTimer]; // 创建定时器前先停止定时器，不然会出现僵尸定时器，导致轮播频率错误
-    
-    LVProxy *proxy = [[LVProxy alloc] initWithObjc:self];
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.speed target:proxy selector:@selector(setupTextScroll) userInfo:nil repeats:YES];
-    [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
-}
-
-- (void)setupTextScroll
-{
-    LVCollectionViewCell *cell = (LVCollectionViewCell *)[self.mainView cellForItemAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-    CGFloat cellOrigin = self.scrollDirection == UICollectionViewScrollDirectionVertical ? cell.textLabel.frame.origin.y :cell.textLabel.frame.origin.x;
-    if (self.textScrollMode != LVTextScrollModeFour) {
-        cellOrigin --;
-    }else {
-        cellOrigin += self.wanderingOffset;
-        CGFloat range = self.scrollDirection == UICollectionViewScrollDirectionVertical ? _selfHeight : _selfWidth;
-        if (self.textSize > range) {
-            if (cellOrigin < - (self.textSize - range)) {
-                self.wanderingOffset = 1;
-            }
-            if (cellOrigin > 0) {
-                self.wanderingOffset = - 1;
-            }
-        }else if (self.textSize < range){
-            if (cellOrigin < 0) {
-                self.wanderingOffset = 1;
-            }
-            if (cellOrigin > range - self.textSize) {
-                self.wanderingOffset = -1 ;
-            }
-        }
+    if (_autoScroll && _dataSourceArr.count) {
+        dispatch_queue_t queue = dispatch_get_main_queue();
+        
+        self.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+        
+        dispatch_source_set_timer(self.timer,
+                                  dispatch_time(DISPATCH_TIME_NOW, self.autoScrollTimeInterval * NSEC_PER_SEC),
+                                  (self.autoScrollTimeInterval + self.scrollTime) * NSEC_PER_SEC,
+                                  0);
+        
+        __weak typeof(self) weakSelf = self;
+        dispatch_source_set_event_handler(self.timer, ^{
+            [weakSelf automaticScroll];
+        });
+        
+        dispatch_resume(self.timer);
     }
-    
-    if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-        cell.textFrame = CGRectMake(0, cellOrigin, _selfWidth, self.textSize);
-    }else {
-        cell.textFrame = CGRectMake(cellOrigin, 0  , self.textSize, _selfHeight);
-    }
-    
-    CGFloat range;
-    if (self.textScrollMode != LVTextScrollModeFour) {
-        if (self.textScrollMode == LVTextScrollModeOne) {
-            range = - self.textSize / (self.index + 1) + 2;// 加上一边的内边距 2
-        }else {
-            range = - self.textSize;
-        }
-        if (cellOrigin < range) {
-            if (self.titlesArray.count > 1 && self.textScrollMode != LVTextScrollModeOne) {
-                if (self.index < self.titlesArray.count - 1) {
-                    self.index ++;
-                }else {
-                    self.index = 0;
-                }
-                self.textString = self.titlesArray[self.index];
-                if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-                    self.textSize = [self heightWithString:self.textString font:self.textFont maxSize:self.maxSize];
-                }else {
-                    self.textSize = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width + 4;
-                }
-            }
-            
-            if (self.textScrollMode == LVTextScrollModeThird) {
-                if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-                    cell.textFrame = CGRectMake(0, _selfHeight, _selfWidth, self.textSize);
-                }else {
-                    cell.textFrame = CGRectMake(_selfWidth, 0, self.textSize, _selfHeight);
-                }
-            }else {
-                if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-                    cell.textFrame = CGRectMake(0, 0, _selfWidth, self.textSize);
-                }else {
-                    cell.textFrame = CGRectMake(0, 0, self.textSize, _selfHeight);
-                }
-            }
-            cell.text = self.textString;
-            
-            if (self.textScrollMode != LVImageScrollCardOne) {
-                if ([self.delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)]) {
-                    [self.delegate cycleScrollView:self didScrollToIndex:self.index];
-                }
-                if (self.itemDidScrollOperationBlock) {
-                    self.itemDidScrollOperationBlock(self.index);
-                }
-            }
-            
-        }
-    }
-}
-
-- (void)invalidateTimer
-{
-    [_timer invalidate];
-    _timer = nil;
 }
 
 - (void)automaticScroll
 {
-    [self.timer setFireDate:[NSDate dateWithTimeIntervalSinceNow:self.autoScrollTimeInterval + (self.scrollTime == 0 ? 0.3 : self.scrollTime)]];
     if (0 == _totalItemsCount) return;
     NSInteger currentIndex = [self currentIndex];
     NSInteger targetIndex  = currentIndex + 1;
@@ -606,32 +376,31 @@
     CGFloat angleAtExtreme = (_totalItemsCount - 1) * self.anglePerItem;
     CGFloat factor;
     if (targetIndex >= _totalItemsCount) {
-        [self.timer setFireDate:[NSDate dateWithTimeIntervalSinceNow:self.autoScrollTimeInterval]];
         if (self.infiniteLoop) {
             targetIndex = _totalItemsCount * 0.5;
             if (self.imageScrollType == LVImageScrollCardSeven) {
                 if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
                     factor = angleAtExtreme / (self.mainView.contentSize.height - _selfHeight);
                     offset = CGPointMake(0, targetIndex * self.anglePerItem / factor);
-                }else {
+                } else {
                     factor = angleAtExtreme / (self.mainView.contentSize.width - _selfWidth);
                     offset = CGPointMake(targetIndex * self.anglePerItem / factor, 0);
                 }
-            }else {
+            } else {
                 if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
                     offset = CGPointMake(0, -(_selfHeight - (_itemSize.height + self.space)) / 2 + targetIndex * (_itemSize.height + self.space));
-                }else {
+                } else {
                     offset = CGPointMake(-(_selfWidth - (_itemSize.width + self.space)) / 2 + targetIndex * (_itemSize.width + self.space), 0);
                 }
             }
             [_mainView setContentOffset:offset animated:NO];
-        }else {
+        } else {
             if (self.imageScrollType == LVImageScrollCardSeven) {
                 offset = CGPointMake(0, 0);
-            }else {
+            } else {
                 if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
                     offset = CGPointMake(0, -(_selfHeight - (_itemSize.height + self.space)) / 2);
-                }else {
+                } else {
                     offset = CGPointMake(-(_selfWidth - (_itemSize.width + self.space)) / 2, 0);
                 }
             }
@@ -641,19 +410,19 @@
             [_mainView setContentOffset:offset animated:YES];
         }
         
-    }else {
+    } else {
         if (self.imageScrollType == LVImageScrollCardSeven) {
             if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
                 factor = angleAtExtreme / (self.mainView.contentSize.height - _selfHeight);
                 offset = CGPointMake(0, targetIndex * self.anglePerItem / factor);
-            }else {
+            } else {
                 factor = angleAtExtreme / (self.mainView.contentSize.width - _selfWidth);
                 offset = CGPointMake(targetIndex * self.anglePerItem / factor, 0);
             }
-        }else {
+        } else {
             if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
                 offset = CGPointMake(0, -(_selfHeight - (_itemSize.height + self.space)) / 2 + targetIndex * (_itemSize.height + self.space));
-            }else {
+            } else {
                 offset = CGPointMake(-(_selfWidth - (_itemSize.width + self.space)) / 2 + targetIndex * (_itemSize.width + self.space), 0);
             }
         }
@@ -670,90 +439,104 @@
 
 - (void)setupPageControl
 {
-    if (_pageControl) [_pageControl removeFromSuperview]; // 重新加载数据时调整
+    // 只有水平图片滚动才创建分页控件,满足这两条件后,展不展示再由属性ShowPageControl决定
+    if (_pageControl) { // 重新加载数据时调整
+        [_pageControl removeFromSuperview];
+        _pageControl = nil;
+    }
+    
+    if(_scrollDirection != UICollectionViewScrollDirectionHorizontal || !_imagesArray.count) {
+        return;
+    }
+    
+    TAPageControl *pageControl           = [[TAPageControl alloc] init];
+    pageControl.numberOfPages            = _dataSourceArr.count;
+    pageControl.pointDotColor            = _pointDotColor;
+    pageControl.currentPointDotColor     = _currentPointDotColor;
+    pageControl.currentPointDotAlpha     = _currentPointDotAlpha;
+    pageControl.pointDotAlpha            = _pointDotAlpha;
+    pageControl.pointRotationAngle       = _pointRotationAngle;
+    pageControl.pointZoomSize            = _pointZoomSize;
+    pageControl.currentDotImage          = _currentPointDotImage;
+    pageControl.dotImage                 = _pointDotImage;
+    pageControl.dotSize                  = _pointDotSize;
+    if (!(_currentPointDotImage || _pointDotImage) && !CGSizeEqualToSize(_pointDotSize, CGSizeZero) && !_isSetPointCornerRadius) { // 默认情况取宽的一半
+        pageControl.cornerRadius         = _pointDotSize.width / 2.f;
+    } else {
+        pageControl.cornerRadius         = _pointCornerRadius;
+    }
+    pageControl.userInteractionEnabled   = NO;
+    [self addSubview:pageControl];
+    _pageControl                         = pageControl;
+    
+    
+    // 设置分页控件的frame
+    [self setupPageControlFrame];
+}
 
-    switch (self.pageControlStyle) {
-        case LVPageContolStyleClassic:
-        {
-            UIPageControl *pageControl                = [[UIPageControl alloc] init];
-            pageControl.numberOfPages                 = self.dataSourceArr.count;
-            pageControl.currentPageIndicatorTintColor = self.currentPageDotColor;
-            pageControl.pageIndicatorTintColor        = self.pageDotColor;
-            pageControl.userInteractionEnabled        = NO;
-            [self addSubview:pageControl];
-            _pageControl                              = pageControl;
+- (void)setupPageControlFrame
+{
+    
+    CGSize size = CGSizeZero;
+    
+    _pageControl.spacingBetweenDots = _spacingBetweenDots;
 
-        }
-            break;
+    size = [_pageControl sizeForNumberOfPages:_dataSourceArr.count];
 
-        case LVPageContolStyleCustom:
-        {
-            TAPageControl *pageControl         = [[TAPageControl alloc] init];
-            pageControl.numberOfPages          = self.dataSourceArr.count;
-            pageControl.pageDotColor           = self.pageDotColor;
-            pageControl.currentPageDotColor    = self.currentPageDotColor;
-            pageControl.currentPageDotAlpha    = self.currentPageDotAlpha;
-            pageControl.pageDotAlpha           = self.pageDotAlpha;
-            pageControl.borderColor            = self.pageControlBorderColor;
-            pageControl.borderWidth            = self.pageControlBorderWidth;
-            if (self.isSetCornerRadius) {
-                pageControl.cornerRadius       = self.pageControlCornerRadius;
-            }else {
-                pageControl.cornerRadius       = self.pageControlDotSize.height / 2;
+    CGFloat x = (_selfWidth - size.width) * 0.5;
+    if (_pageControlAliment == LVPageControlLeft) {
+        x = _pageControlMarginOffset;
+    } else if (_pageControlAliment == LVPageControlRight) {
+        x = _selfWidth - size.width - _pageControlMarginOffset;
+    }
+    CGFloat y = _mainView.frame.size.height - size.height - _pageControlBottomOffset;
+    
+    [_pageControl sizeToFit];
+
+
+    CGRect pageControlFrame = CGRectMake(x, y, size.width, size.height);
+    _pageControl.frame  = pageControlFrame;
+
+    _pageControl.hidden = !_showPageControl;
+}
+
+- (void)setContentOffsetCenter
+{
+    if (_isSetCenter && _infiniteLoop) {
+        int targetIndex = _totalItemsCount * 0.5;
+        CGPoint offset  = CGPointZero;
+        if (self.imageScrollType == LVImageScrollCardSeven) {
+            CGFloat angleAtExtreme = (_totalItemsCount - 1) * self.anglePerItem;
+            CGFloat factor;
+            if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
+                factor = angleAtExtreme / (_totalItemsCount * _itemSize.height);
+                offset = CGPointMake(0, targetIndex * self.anglePerItem / factor);
+            } else {
+                factor = angleAtExtreme / (_totalItemsCount * _itemSize.width);
+                offset = CGPointMake(targetIndex * self.anglePerItem / factor, 0);
             }
-            pageControl.userInteractionEnabled = NO;
-            [self addSubview:pageControl];
-            _pageControl                       = pageControl;
+            // 这里获取的self.mainView.contentSize.width为0,应该是collectionView的布局还没完全计算出来,可以在下面设置数据源的时候reload之后再加上layoutIfNeeded,但是此时除了图片滚动样式7,其他样式如果设置了无限循环轮播还是会从第0行开始,就是下面的[weakSelf.mainView setContentOffset:offset animated:NO];会失效,所以这里我直接手动计算出来,因为layout类里面有写,直接用过来就行了
+        } else {
+            if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
+                offset = CGPointMake(0, -(_selfHeight - (_itemSize.height + self.space)) / 2 + targetIndex * (_itemSize.height + self.space));
+            } else {
+                offset = CGPointMake(-(_selfWidth - (_itemSize.width + self.space)) / 2 + targetIndex * (_itemSize.width + self.space), 0);
+            }
         }
-            break;
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.mainView setContentOffset:offset animated:NO];
+        });
+        _isSetCenter = NO;
     }
 }
 
-- (void)calculateAction
-{
-    if (self.textScrollMode == LVTextScrollModeOne || self.textScrollMode == LVTextScrollModeFour) {
-        if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-            self.textString = [self.titlesArray componentsJoinedByString:@"\n"];
-            self.textSize   = [self heightWithString:self.textString font:self.textFont maxSize:self.maxSize];
-        }else {
-            self.textString = [self.titlesArray componentsJoinedByString:@" "];
-            self.textSize   = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width + 4;
-        }
-        
-        if (self.textScrollMode == LVTextScrollModeOne) {
-            NSString *totalText = self.textString;
-            CGFloat totalSize   = self.textSize;
-            while (totalSize - self.textSize < (self.scrollDirection == UICollectionViewScrollDirectionVertical ? _selfHeight : _selfWidth)) {
-                if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-                    totalText = [NSString stringWithFormat:@"%@\n%@",totalText,self.textString];
-                    totalSize = [self heightWithString:totalText font:self.textFont maxSize:self.maxSize];
-                }else {
-                    totalText = [NSString stringWithFormat:@"%@ %@",totalText,self.textString];
-                    totalSize = [totalText sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width + 4;
-                }
-                
-                self.index ++;
-            }
-            self.textString = totalText;
-            self.textSize   = totalSize;
-        }
-    }else {
-        self.textString = self.titlesArray.firstObject;
-        if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
-            self.textSize = [self heightWithString:self.textString font:self.textFont maxSize:self.maxSize];
-        }else {
-            self.textSize = [self.textString sizeWithAttributes:[NSDictionary dictionaryWithObjectsAndKeys:self.textFont, NSFontAttributeName, nil]].width + 4;
-        }
-    }
-}
 
-- (CGFloat)heightWithString:(NSString *)str font:(UIFont *)font maxSize:(CGSize)maxSize
+- (void)setViewLayout
 {
-    NSDictionary *dict = @{NSFontAttributeName: font};
-    CGSize textSize    = [str boundingRectWithSize:maxSize options:NSStringDrawingUsesLineFragmentOrigin attributes:dict context:nil].size;
-    return textSize.height + 4;
+    _isSetCenter = YES;
+    [self setNeedsLayout];
 }
-
 
 #pragma mark - 公有方法
 
@@ -762,11 +545,11 @@
         [self invalidateTimer];
     }
     if (0 == _totalItemsCount) return;
-    
+
     [self scrollToIndex:index];
     
     if (self.autoScroll) {
-        [self setupImageTimer];
+        [self setupTimer];
     }
 }
 
@@ -781,11 +564,7 @@
 
 - (void)move
 {
-    if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone) {
-        [self setupTextTimer];
-    }else {
-        [self setupImageTimer];
-    }
+    [self setupTimer];
 }
 
 - (void)stop
@@ -793,14 +572,19 @@
     [self invalidateTimer];
 }
 
+- (void)invalidateTimer
+{
+    if (_timer) {
+        dispatch_source_cancel(_timer);
+        _timer = nil;
+    }
+}
+
 
 #pragma mark - Setter & Getter
 
 - (void)setImagesArray:(NSArray *)imagesArray
 {
-    if (self.scrollType != LVImageScroll) {
-        return;
-    }
     _imagesArray = imagesArray;
     NSMutableArray *temp = [NSMutableArray new];
     [_imagesArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL * stop) {
@@ -816,70 +600,55 @@
         }
     }];
     self.dataSourceArr = [temp copy];
-    _totalItemsCount = self.infiniteLoop ? self.dataSourceArr.count * 100 : self.dataSourceArr.count;
-    if (_totalItemsCount > 1) { // 由于 !=1 包含count == 0等情况
-        self.mainView.scrollEnabled = YES;
-        [self setAutoScroll:self.autoScroll];
-    } else {
-        self.mainView.scrollEnabled = NO;
-        [self invalidateTimer];
-    }
-    
-    // 只有水平图片滚动才创建分页控件,满足这两条件后,展不展示再由属性ShowPageControl决定
-    if(_scrollDirection == UICollectionViewScrollDirectionHorizontal) {
-        [self setupPageControl];
-    }
-    [self.mainView reloadData];
-    
 }
 
 - (void)setTitlesArray:(NSArray *)titlesArray
 {
     _titlesArray = titlesArray;
-    if (self.scrollType == LVOnlyTextScroll && self.textScrollMode == LVTextScrollModeNone) {
+    if (!self.imagesArray.count) {
         self.dataSourceArr = titlesArray;
-        _totalItemsCount = self.infiniteLoop ? self.dataSourceArr.count * 100 : self.dataSourceArr.count;
-        if (_totalItemsCount > 1) { // 由于 !=1 包含count == 0等情况
-            self.mainView.scrollEnabled = YES;
-            [self setAutoScroll:self.autoScroll];
-        } else {
-            self.mainView.scrollEnabled = NO;
-            [self invalidateTimer];
-        }
-        [self.mainView reloadData];
-    }else if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone) {
-        [self invalidateTimer];
-        self.infiniteLoop = NO;
-        self.mainView.scrollEnabled = NO;
-        [self.mainView reloadData];
     }
 }
 
-- (void)setTextScrollMode:(LVTextScrollMode)textScrollMode
+- (void)setDataSourceArr:(NSArray *)dataSourceArr
 {
-    _textScrollMode = textScrollMode;
-    if (self.scrollType == LVOnlyTextScroll && textScrollMode != LVTextScrollModeNone) {
-        [self invalidateTimer];
-        self.infiniteLoop = NO;
-        self.mainView.scrollEnabled = NO;
-        [self.mainView reloadData];
+    _dataSourceArr = dataSourceArr;
+    _totalItemsCount = _infiniteLoop ? _dataSourceArr.count * 100 : _dataSourceArr.count;
+    [self.mainView reloadData];
+
+    [self setViewLayout];
+    
+    if ([self.delegate respondsToSelector:@selector(cycleScrollView:didScrollToIndex:)]) {
+        [self.delegate cycleScrollView:self didScrollToIndex:0];
+    }
+    
+    if (self.itemDidScrollOperationBlock) {
+        self.itemDidScrollOperationBlock(0);
     }
 }
 
 - (void)setInfiniteLoop:(BOOL)infiniteLoop
 {
-    if (self.scrollType == LVOnlyTextScroll && self.textScrollMode != LVTextScrollModeNone) {
-        return;
-    }
     _infiniteLoop = infiniteLoop;
-    _totalItemsCount = self.infiniteLoop ? self.dataSourceArr.count * 100 : self.dataSourceArr.count;
-    if (_totalItemsCount > 1) { // 由于 !=1 包含count == 0等情况
-        self.mainView.scrollEnabled = YES;
-        [self setAutoScroll:self.autoScroll];
-    } else {
-        self.mainView.scrollEnabled = NO;
-        [self invalidateTimer];
+    _totalItemsCount = _infiniteLoop ? _dataSourceArr.count * 100 : _dataSourceArr.count;
+    if (_totalItemsCount) {
+        [self.mainView reloadData];
+        [self setViewLayout];
     }
+}
+
+- (void)setItemSize:(CGSize)itemSize
+{
+    _itemSize = itemSize;
+    _mainViewLayout.itemSize = itemSize;
+}
+
+- (void)setScrollDirection:(UICollectionViewScrollDirection)scrollDirection
+{
+    _scrollDirection = scrollDirection;
+    _mainViewLayout.scrollDirection = scrollDirection;
+
+    [self setupPageControl];
 }
 
 - (void)setImageScrollType:(LVImageScrollType)imageScrollType
@@ -926,149 +695,101 @@
 
 - (void)setShowPageControl:(BOOL)showPageControl
 {
-    if (_scrollType == LVImageScroll && _scrollDirection == UICollectionViewScrollDirectionHorizontal) {
-        _showPageControl = showPageControl;
-        _pageControl.hidden = !showPageControl;
-    }
+    _showPageControl = showPageControl;
+    _pageControl.hidden = !showPageControl;
 }
 
-- (void)setPageControlDotSize:(CGSize)pageControlDotSize
+- (void)setPointDotSize:(CGSize)pointDotSize
 {
-    if (pageControlDotSize.height != pageControlDotSize.width) {
-        NSAssert(NO, @"宽高必须相同");
-    }
-    _pageControlDotSize = pageControlDotSize;
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageContol = (TAPageControl *)_pageControl;
-        pageContol.dotSize = pageControlDotSize;
-        if (!self.isSetCornerRadius) {
-            pageContol.cornerRadius = pageControlDotSize.height / 2;
-        }
+    _pointDotSize = pointDotSize;
+    _pageControl.dotSize = pointDotSize;
+    if (!(_isSetPointCornerRadius || _currentPointDotImage || _pointDotImage)) {
+        _pointCornerRadius = pointDotSize.width / 2.f;
+        _pageControl.cornerRadius = _pointCornerRadius;
     }
 }
 
-- (void)setPageControlCornerRadius:(CGFloat)pageControlCornerRadius
+- (void)setSpacingBetweenDots:(CGFloat)spacingBetweenDots
 {
-    _pageControlCornerRadius = pageControlCornerRadius;
-    self.isSetCornerRadius = YES;
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        pageControl.cornerRadius = pageControlCornerRadius;
+    _spacingBetweenDots = spacingBetweenDots;
+    if (self.imagesArray.count && _scrollDirection == UICollectionViewScrollDirectionHorizontal) {
+        [self setupPageControlFrame];
     }
 }
 
--(void)setAutoScroll:(BOOL)autoScroll{
-    _autoScroll = autoScroll;
-    [self invalidateTimer];
-    if (_autoScroll) {
-        [self setupImageTimer];
-    }
+- (void)setPointCornerRadius:(CGFloat)pointCornerRadius
+{
+    _pointCornerRadius = pointCornerRadius;
+    _pageControl.cornerRadius = pointCornerRadius;
+    _isSetPointCornerRadius = YES;
 }
 
 - (void)setAutoScrollTimeInterval:(CGFloat)autoScrollTimeInterval
 {
     _autoScrollTimeInterval = autoScrollTimeInterval;
-    if (autoScrollTimeInterval > 0) {
-        [self setupImageTimer];
+    if (autoScrollTimeInterval > 0 && _autoScroll) {
+        [self setupTimer];
     }
 }
 
-- (void)setPageControlStyle:(LVPageControlStyle)pageControlStyle
+- (void)setCurrentPointDotColor:(UIColor *)currentPointDotColor
 {
-    _pageControlStyle = pageControlStyle;
-    [self setupPageControl];
+    _currentPointDotColor = currentPointDotColor;
+    _pageControl.currentPointDotColor = currentPointDotColor;
 }
 
-- (void)setCurrentPageDotColor:(UIColor *)currentPageDotColor
+- (void)setPointDotColor:(UIColor *)pointDotColor
 {
-    _currentPageDotColor = currentPageDotColor;
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        pageControl.currentPageDotColor = currentPageDotColor;
-    } else {
-        UIPageControl *pageControl = (UIPageControl *)_pageControl;
-        pageControl.currentPageIndicatorTintColor = currentPageDotColor;
+    _pointDotColor = pointDotColor;
+    _pageControl.pointDotColor = pointDotColor;
+}
+
+- (void)setCurrentPointDotAlpha:(CGFloat)currentPointDotAlpha
+{
+    _currentPointDotAlpha = currentPointDotAlpha;
+    _pageControl.currentPointDotAlpha = currentPointDotAlpha;
+}
+
+- (void)setPointDotAlpha:(CGFloat)pointDotAlpha
+{
+    _pointDotAlpha = pointDotAlpha;
+    _pageControl.pointDotAlpha = pointDotAlpha;
+}
+
+- (void)setCurrentPointDotImage:(UIImage *)currentPointDotImage
+{
+    _currentPointDotImage = currentPointDotImage;
+    if (currentPointDotImage) {
+        _pageControl.currentDotImage = currentPointDotImage;
+    }
+    if (!_isSetPointCornerRadius) { // 不设置圆角, 默认_pointDotSize宽的一半, 设置图片默认为0
+        _pointCornerRadius = 0;
+        _pageControl.cornerRadius = 0;
     }
 }
 
-- (void)setPageDotColor:(UIColor *)pageDotColor
+- (void)setPointDotImage:(UIImage *)pointDotImage
 {
-    _pageDotColor = pageDotColor;
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        pageControl.pageDotColor = pageDotColor;
-    } else {
-        UIPageControl *pageControl = (UIPageControl *)_pageControl;
-        pageControl.pageIndicatorTintColor = pageDotColor;
+    _pointDotImage = pointDotImage;
+    if (pointDotImage) {
+        _pageControl.dotImage = pointDotImage;
+    }
+    if (!_isSetPointCornerRadius) {
+        _pointCornerRadius = 0;
+        _pageControl.cornerRadius = 0;
     }
 }
 
-- (void)setPageControlBorderColor:(UIColor *)pageControlBorderColor
+- (void)setPointZoomSize:(CGFloat)pointZoomSize
 {
-    _pageControlBorderColor = pageControlBorderColor;
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        pageControl.borderColor = pageControlBorderColor;
-    }
+    _pointZoomSize = pointZoomSize;
+    _pageControl.pointZoomSize = pointZoomSize;
 }
 
-- (void)setCurrentPageDotImage:(UIImage *)currentPageDotImage
+- (void)setPointRotationAngle:(CGFloat)pointRotationAngle
 {
-    _currentPageDotImage = currentPageDotImage;
-    if (self.pageControlStyle != LVPageContolStyleCustom) {
-        return;
-    }
-    [self setCustomPageControlDotImage:currentPageDotImage isCurrentPageDot:YES];
-}
-
-- (void)setPageDotImage:(UIImage *)pageDotImage
-{
-    _pageDotImage = pageDotImage;
-    if (self.pageControlStyle != LVPageContolStyleCustom) {
-        return;
-    }
-    [self setCustomPageControlDotImage:pageDotImage isCurrentPageDot:NO];
-}
-
-- (void)setCustomPageControlDotImage:(UIImage *)image isCurrentPageDot:(BOOL)isCurrentPageDot
-{
-    if (!image || !self.pageControl) return;
-    
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        if (isCurrentPageDot) {
-            pageControl.currentDotImage = image;
-        } else {
-            pageControl.dotImage = image;
-        }
-    }
-}
-
-- (void)setPageControlBorderWidth:(CGFloat)pageControlBorderWidth
-{
-    _pageControlBorderWidth = pageControlBorderWidth;
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        pageControl.borderWidth = pageControlBorderWidth;
-    }
-}
-
-- (void)setPageControlZoomSize:(CGFloat)pageControlZoomSize
-{
-    _pageControlZoomSize = pageControlZoomSize;
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        pageControl.pageControlZoomSize = pageControlZoomSize;
-    }
-}
-
-- (void)setPageControlRotationAngle:(CGFloat)pageControlRotationAngle
-{
-    _pageControlRotationAngle = pageControlRotationAngle;
-    if ([self.pageControl isKindOfClass:[TAPageControl class]]) {
-        TAPageControl *pageControl = (TAPageControl *)_pageControl;
-        pageControl.pageControlRotationAngle = pageControlRotationAngle;
-    }
+    _pointRotationAngle = pointRotationAngle;
+    _pageControl.pointRotationAngle = pointRotationAngle;
 }
 
 - (void)setPageControlBottomOffset:(CGFloat)pageControlBottomOffset
@@ -1087,5 +808,28 @@
     }
 }
 
+- (UICollectionView *)mainView
+{
+    if (_mainView == nil) {
+        
+        LVCollectionViewLayout *layout = [[LVCollectionViewLayout alloc] init];
+        layout.scrollDirection         = _scrollDirection;
+        layout.itemSize                = _itemSize;
+        _mainViewLayout                = layout;
+
+        _mainView                                = [[UICollectionView alloc] initWithFrame:self.bounds collectionViewLayout:_mainViewLayout];
+        _mainView.backgroundColor                = [UIColor clearColor];
+        _mainView.pagingEnabled                  = false;
+        _mainView.showsHorizontalScrollIndicator = NO;
+        _mainView.showsVerticalScrollIndicator   = NO;
+        _mainView.dataSource                     = self;
+        _mainView.delegate                       = self;
+        _mainView.scrollsToTop                   = NO;
+        // 若不设置,竖直滚动,当collectionView的顶部超过导航栏底部,collectionView刚创建好的时候contentOffset.y会偏移
+        _mainView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+        [_mainView registerClass:[LVCollectionViewCell class] forCellWithReuseIdentifier:NSStringFromClass([LVCollectionViewCell class])];
+    }
+    return _mainView;
+}
 
 @end

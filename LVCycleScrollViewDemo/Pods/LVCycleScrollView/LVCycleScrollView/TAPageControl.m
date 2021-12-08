@@ -7,7 +7,6 @@
 //
 
 #import "TAPageControl.h"
-#import "TAAbstractDotView.h"
 #import "TADotView.h"
 
 /**
@@ -21,11 +20,6 @@ static NSInteger const kDefaultNumberOfPages = 0;
 static NSInteger const kDefaultCurrentPage = 0;
 
 /**
- *  Default setting for hide for single page feature. For initialization
- */
-static BOOL const kDefaultHideForSinglePage = NO;
-
-/**
  *  Default setting for shouldResizeFromCenter. For initialiation
  */
 static BOOL const kDefaultShouldResizeFromCenter = YES;
@@ -34,11 +28,6 @@ static BOOL const kDefaultShouldResizeFromCenter = YES;
  *  Default spacing between dots
  */
 static NSInteger const kDefaultSpacingBetweenDots = 8;
-
-/**
- *  Default dot size
- */
-static CGSize const kDefaultDotSize = {8, 8};
 
 
 @interface TAPageControl()
@@ -99,11 +88,7 @@ static CGSize const kDefaultDotSize = {8, 8};
     self.spacingBetweenDots     = kDefaultSpacingBetweenDots;
     self.numberOfPages          = kDefaultNumberOfPages;
     self.currentPage            = kDefaultCurrentPage;
-    self.hidesForSinglePage     = kDefaultHideForSinglePage;
     self.shouldResizeFromCenter = kDefaultShouldResizeFromCenter;
-    
-    self.pageControlZoomSize = 1;
-    self.pageControlRotationAngle = 0;
 }
 
 
@@ -160,8 +145,6 @@ static CGSize const kDefaultDotSize = {8, 8};
     }
     
     [self changeActivity:YES atIndex:self.currentPage];
-    
-    [self hideForSinglePage];
 }
 
 
@@ -213,23 +196,18 @@ static CGSize const kDefaultDotSize = {8, 8};
  */
 - (UIView *)generateDotView
 {
-    UIView *dotView;
-    
-    if (self.dotViewClass) {
-        dotView = [[self.dotViewClass alloc] initWithFrame:CGRectMake(0, 0, self.dotSize.width, self.dotSize.height)];
-        if ([dotView isKindOfClass:[TADotView class]]) {
-            if (self.pageDotColor) {
-                ((TADotView *)dotView).pageDotColor = self.pageDotColor;
-            }
-            ((TADotView *)dotView).cornerRadius = self.cornerRadius;
-            ((TADotView *)dotView).borderColor = self.borderColor;
-            ((TADotView *)dotView).borderWidth = self.borderWidth;
-            
-        }
-    } else {
-        dotView = [[UIImageView alloc] initWithImage:self.dotImage];
-        dotView.frame = CGRectMake(0, 0, self.dotSize.width, self.dotSize.height);
+    UIView *dotView = [[self.dotViewClass alloc] initWithFrame:CGRectMake(0, 0, self.dotSize.width, self.dotSize.height)];
+    dotView.clipsToBounds =YES;
+    if (self.pointDotColor) {
+        ((TADotView *)dotView).backgroundColor = self.pointDotColor;
     }
+    
+    ((TADotView *)dotView).alpha = self.pointDotAlpha;
+    ((TADotView *)dotView).cornerRadius = self.cornerRadius;
+    
+    UIImageView *imageView = [[UIImageView alloc] initWithImage:self.dotImage];
+    imageView.frame = dotView.frame;
+    [dotView addSubview:imageView];
     
     if (dotView) {
         [self addSubview:dotView];
@@ -250,15 +228,18 @@ static CGSize const kDefaultDotSize = {8, 8};
  */
 - (void)changeActivity:(BOOL)active atIndex:(NSInteger)index
 {
-    if (self.dotViewClass) {
-        TAAbstractDotView *abstractDotView = (TAAbstractDotView *)[self.dots objectAtIndex:index];
-        if ([abstractDotView respondsToSelector:@selector(changeActivityState:)]) {
-            [abstractDotView changeActivityState:active currentPageDotColor:self.currentPageDotColor pageDotColor:self.pageDotColor currentPageDotAlpha:self.currentPageDotAlpha pageDotAlpha:self.pageDotAlpha pageControlRotationAngle:self.pageControlRotationAngle pageControlZoomSize:self.pageControlZoomSize];
-        } else {
-            NSLog(@"Custom view : %@ must implement an 'changeActivityState' method or you can subclass %@ to help you.", self.dotViewClass, [TAAbstractDotView class]);
-        }
-    } else if (self.dotImage && self.currentDotImage) {
-        UIImageView *dotView = (UIImageView *)[self.dots objectAtIndex:index];
+    TADotView *abstractDotView = (TADotView *)[self.dots objectAtIndex:index];
+    abstractDotView.alpha = active ? self.currentPointDotAlpha : self.pointDotAlpha;
+    abstractDotView.backgroundColor = active ? self.currentPointDotColor : self.pointDotColor;
+
+    if ([abstractDotView respondsToSelector:@selector(changeActivityState:)]) {
+        [abstractDotView changeActivityState:active pointRotationAngle:self.pointRotationAngle pointZoomSize:self.pointZoomSize];
+    } else {
+        NSLog(@"Custom view : %@ must implement an 'changeActivityState' method or you can subclass %@ to help you.", self.dotViewClass, [TADotView class]);
+    }
+    
+    if (self.dotImage && self.currentDotImage) {
+        UIImageView *dotView = (UIImageView *)abstractDotView.subviews.firstObject;
         dotView.image = (active) ? self.currentDotImage : self.dotImage;
     }
 }
@@ -275,34 +256,25 @@ static CGSize const kDefaultDotSize = {8, 8};
 }
 
 
-- (void)hideForSinglePage
+#pragma mark - Setters
+
+- (void)setCornerRadius:(CGFloat)cornerRadius
 {
-    if (self.dots.count == 1 && self.hidesForSinglePage) {
-        self.hidden = YES;
-    } else {
-        self.hidden = NO;
+    _cornerRadius = cornerRadius;
+    
+    if (self.dots.count) {
+        [self resetDotViews];
     }
 }
 
-#pragma mark - Setters
-
-
-- (void)setNumberOfPages:(NSInteger)numberOfPages
+- (void)setPointZoomSize:(CGFloat)pointZoomSize
 {
-    _numberOfPages = numberOfPages;
+    _pointZoomSize = pointZoomSize;
     
-    // Update dot position to fit new number of pages
-    [self resetDotViews];
+    if (self.dots.count) {
+        [self resetDotViews];
+    }
 }
-
-
-- (void)setSpacingBetweenDots:(NSInteger)spacingBetweenDots
-{
-    _spacingBetweenDots = spacingBetweenDots;
-    
-    [self resetDotViews];
-}
-
 
 - (void)setCurrentPage:(NSInteger)currentPage
 {
@@ -323,28 +295,22 @@ static CGSize const kDefaultDotSize = {8, 8};
 - (void)setDotImage:(UIImage *)dotImage
 {
     _dotImage = dotImage;
-    [self resetDotViews];
-    self.dotViewClass = nil;
+    if (self.dots.count) {
+        [self resetDotViews];
+    }
 }
 
 
 - (void)setCurrentDotImage:(UIImage *)currentDotimage
 {
     _currentDotImage = currentDotimage;
-    [self resetDotViews];
-    self.dotViewClass = nil;
-}
-
-- (void)setDotViewClass:(Class)dotViewClass
-{
-    _dotViewClass = dotViewClass;
-    self.dotSize = CGSizeZero;
-    [self resetDotViews];
+    if (self.dots.count) {
+        [self resetDotViews];
+    }
 }
 
 
 #pragma mark - Getters
-
 
 - (NSMutableArray *)dots
 {
@@ -353,20 +319,6 @@ static CGSize const kDefaultDotSize = {8, 8};
     }
     
     return _dots;
-}
-
-
-- (CGSize)dotSize
-{
-    // Dot size logic depending on the source of the dot view
-    if (self.dotImage && CGSizeEqualToSize(_dotSize, CGSizeZero)) {
-        _dotSize = self.dotImage.size;
-    } else if (self.dotViewClass && CGSizeEqualToSize(_dotSize, CGSizeZero)) {
-        _dotSize = kDefaultDotSize;
-        return _dotSize;
-    }
-    
-    return _dotSize;
 }
 
 @end

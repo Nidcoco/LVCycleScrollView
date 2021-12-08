@@ -8,7 +8,6 @@
 
 #import <UIKit/UIKit.h>
 #import "LVCycleScrollView.h"
-#import "LVLabel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -18,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) UIImageView *imageView;
 
 /// 文字
-@property (nonatomic, strong) LVLabel *textLabel;
+@property (nonatomic, strong) UILabel *textLabel;
 @property (nonatomic, strong) NSString *text;
 
 @property (nonatomic, strong) UIColor *textLabelTextColor;
@@ -30,16 +29,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, assign) BOOL hasConfigured;
 
-/// 滚动类型
-@property (nonatomic, assign) LVScrollType scrollType;
-
-/// 竖直/水平滚动
-@property (nonatomic, assign) UICollectionViewScrollDirection scrollDirection;
-
 /// 文字的frame
 @property (nonatomic, assign) CGRect textFrame;
 
-@property (nonatomic, assign) BOOL isTextModeThird;
+@property (nonatomic, assign) BOOL isOnlyText;
 
 @end
 

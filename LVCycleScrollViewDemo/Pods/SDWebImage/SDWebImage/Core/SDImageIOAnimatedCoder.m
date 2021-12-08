@@ -108,6 +108,36 @@ static NSString * kSDCGImageDestinationRequestedFileSize = @"kCGImageDestination
 
 #pragma mark - Utils
 
++ (BOOL)canDecodeFromFormat:(SDImageFormat)format {
+    static dispatch_once_t onceToken;
+    static NSSet *imageUTTypeSet;
+    dispatch_once(&onceToken, ^{
+        NSArray *imageUTTypes = (__bridge_transfer NSArray *)CGImageSourceCopyTypeIdentifiers();
+        imageUTTypeSet = [NSSet setWithArray:imageUTTypes];
+    });
+    CFStringRef imageUTType = [NSData sd_UTTypeFromImageFormat:format];
+    if ([imageUTTypeSet containsObject:(__bridge NSString *)(imageUTType)]) {
+        // Can decode from target format
+        return YES;
+    }
+    return NO;
+}
+
++ (BOOL)canEncodeToFormat:(SDImageFormat)format {
+    static dispatch_once_t onceToken;
+    static NSSet *imageUTTypeSet;
+    dispatch_once(&onceToken, ^{
+        NSArray *imageUTTypes = (__bridge_transfer NSArray *)CGImageDestinationCopyTypeIdentifiers();
+        imageUTTypeSet = [NSSet setWithArray:imageUTTypes];
+    });
+    CFStringRef imageUTType = [NSData sd_UTTypeFromImageFormat:format];
+    if ([imageUTTypeSet containsObject:(__bridge NSString *)(imageUTType)]) {
+        // Can encode to target format
+        return YES;
+    }
+    return NO;
+}
+
 + (NSUInteger)imageLoopCountWithSource:(CGImageSourceRef)source {
     NSUInteger loopCount = self.defaultLoopCount;
     NSDictionary *imageProperties = (__bridge_transfer NSDictionary *)CGImageSourceCopyProperties(source, NULL);
@@ -161,8 +191,8 @@ static NSString * kSDCGImageDestinationRequestedFileSize = @"kCGImageDestination
     // Some options need to pass to `CGImageSourceCopyPropertiesAtIndex` before `CGImageSourceCreateImageAtIndex`, or ImageIO will ignore them because they parse once :)
     // Parse the image properties
     NSDictionary *properties = (__bridge_transfer NSDictionary *)CGImageSourceCopyPropertiesAtIndex(source, index, (__bridge CFDictionaryRef)options);
-    NSUInteger pixelWidth = [properties[(__bridge NSString *)kCGImagePropertyPixelWidth] unsignedIntegerValue];
-    NSUInteger pixelHeight = [properties[(__bridge NSString *)kCGImagePropertyPixelHeight] unsignedIntegerValue];
+    CGFloat pixelWidth = [properties[(__bridge NSString *)kCGImagePropertyPixelWidth] doubleValue];
+    CGFloat pixelHeight = [properties[(__bridge NSString *)kCGImagePropertyPixelHeight] doubleValue];
     CGImagePropertyOrientation exifOrientation = (CGImagePropertyOrientation)[properties[(__bridge NSString *)kCGImagePropertyOrientation] unsignedIntegerValue];
     if (!exifOrientation) {
         exifOrientation = kCGImagePropertyOrientationUp;
@@ -182,7 +212,8 @@ static NSString * kSDCGImageDestinationRequestedFileSize = @"kCGImageDestination
         decodingOptions = [NSMutableDictionary dictionary];
     }
     CGImageRef imageRef;
-    if (thumbnailSize.width == 0 || thumbnailSize.height == 0 || pixelWidth == 0 || pixelHeight == 0 || (pixelWidth <= thumbnailSize.width && pixelHeight <= thumbnailSize.height)) {
+    BOOL createFullImage = thumbnailSize.width == 0 || thumbnailSize.height == 0 || pixelWidth == 0 || pixelHeight == 0 || (pixelWidth <= thumbnailSize.width && pixelHeight <= thumbnailSize.height);
+    if (createFullImage) {
         if (isVector) {
             if (thumbnailSize.width == 0 || thumbnailSize.height == 0) {
                 // Provide the default pixel count for vector images, simply just use the screen size
@@ -221,8 +252,8 @@ static NSString * kSDCGImageDestinationRequestedFileSize = @"kCGImageDestination
     if (!imageRef) {
         return nil;
     }
-    
-    if (thumbnailSize.width > 0 && thumbnailSize.height > 0) {
+    // Thumbnail image post-process
+    if (!createFullImage) {
         if (preserveAspectRatio) {
             // kCGImageSourceCreateThumbnailWithTransform will apply EXIF transform as well, we should not apply twice
             exifOrientation = kCGImagePropertyOrientationUp;
@@ -465,8 +496,8 @@ static NSString * kSDCGImageDestinationRequestedFileSize = @"kCGImageDestination
         maxPixelSize = maxPixelSizeValue.CGSizeValue;
 #endif
     }
-    NSUInteger pixelWidth = CGImageGetWidth(imageRef);
-    NSUInteger pixelHeight = CGImageGetHeight(imageRef);
+    CGFloat pixelWidth = (CGFloat)CGImageGetWidth(imageRef);
+    CGFloat pixelHeight = (CGFloat)CGImageGetHeight(imageRef);
     CGFloat finalPixelSize = 0;
     if (maxPixelSize.width > 0 && maxPixelSize.height > 0 && pixelWidth > maxPixelSize.width && pixelHeight > maxPixelSize.height) {
         CGFloat pixelRatio = pixelWidth / pixelHeight;
@@ -624,7 +655,7 @@ static NSString * kSDCGImageDestinationRequestedFileSize = @"kCGImageDestination
         return nil;
     }
     image.sd_imageFormat = self.class.imageFormat;
-    image.sd_isDecoded = YES;;
+    image.sd_isDecoded = YES;
     return image;
 }
 

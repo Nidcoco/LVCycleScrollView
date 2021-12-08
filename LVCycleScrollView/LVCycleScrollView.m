@@ -268,8 +268,6 @@
         self.mainView.frame = self.bounds;
     }
     
-    NSLog(@"%lf",_selfWidth);
-    
     if (CGSizeEqualToSize(CGSizeZero, _itemSize)) {
         _itemSize = CGSizeMake(_selfWidth, _selfHeight);
         _mainViewLayout.itemSize = _itemSize;
