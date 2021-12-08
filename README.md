@@ -11,7 +11,7 @@ LVCycleScrollView
 
 介绍
 ==============
-这是一个图片及文字自动轮播的控件,由于本人是个的小菜鸟,所以这个第三方库都是看别人的,主体代码是参考[SDCycleScrollView](https://github.com/gsdios/SDCycleScrollView),图片滚轮样式是参考这篇博客[UICollectionView自定义布局](https://juejin.im/post/5a320ea36fb9a0452405d8bb),文字水平滚动是参考[LMJHorizontalScrollText](https://github.com/JerryLMJ/LMJHorizontalScrollText),自定义的UICollectionViewLayout是跟[HJCarouselDemo](https://github.com/panghaijiao/HJCarouselDemo)学习的,本人现阶段能力有限,代码比较混乱,累赘,看不惯的兄弟可以使用上面的`SDCycleScrollView`
+这是一个图片及文字自动轮播的控件,由于本人是个的小菜鸟,所以这个第三方库都是看别人的,主体代码是参考[SDCycleScrollView](https://github.com/gsdios/SDCycleScrollView),图片滚轮样式是参考这篇博客[UICollectionView自定义布局](https://juejin.im/post/5a320ea36fb9a0452405d8bb),自定义的UICollectionViewLayout是跟[HJCarouselDemo](https://github.com/panghaijiao/HJCarouselDemo)学习的,本人现阶段能力有限,代码比较混乱,累赘,看不惯的兄弟可以使用上面的`SDCycleScrollView`
 
 新版本定时器使用了GCD定时器, 精度更高, 且GCD 和 runloop 没有关系, 可以少创建一个NSProxy类来防止NSTimer造成的循环引用造成的内存泄漏, 推荐更新
 
@@ -124,7 +124,7 @@ view.textBackgroundColor = [UIColor colorWithRed:64/255.f green:151/255.f blue:2
 
 
 ## 版本1.0.2
-这个版本更改比较大, 分页控件的部分属性名我修改了, 如果之前使用了0.0.9以下的版本更新1.0.0版本以上应该会报错
+这个版本更改比较大, 分页控件的部分属性名我修改了, 并且去掉了多余的文字滚动, 如果之前使用了0.0.9以下的版本更新1.0.0版本以上应该会报错
 
 最后
 ==============
