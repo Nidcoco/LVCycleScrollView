@@ -75,7 +75,6 @@
         LVCycleScrollView *view3 = [[LVCycleScrollView alloc] initWithFrame:CGRectMake(0, 420, self.view.frame.size.width, 200)];
         [sView addSubview:view3];
         _cycleView = view3;
-
         [self performSelector:@selector(delayAction) withObject:nil afterDelay:1.];
         
         // 带文字的无限滚动, 文字比图片少

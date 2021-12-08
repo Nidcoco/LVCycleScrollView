@@ -197,7 +197,7 @@ typedef enum {
 /// 继续滚动,既然暂停用的是dispatch_source_cancel,继续滚动就是重新创建定时器
 - (void)move;
 
-/// 滚动手势禁用,只适用于除图片滚动,无样式的文字滚动,因为有样式的图片滚动默认禁止手势
+/// 滚动手势禁用
 - (void)disableScrollGesture;
 
 /// 可以调用此方法手动控制滚动到哪一个index
