@@ -283,6 +283,10 @@
 
 }
 
+- (void)dealloc {
+    [self invalidateTimer];
+}
+
 #pragma mark - 私有方法
 
 - (NSInteger)currentIndex
@@ -511,7 +515,7 @@
                 factor = angleAtExtreme / (_totalItemsCount * _itemSize.width);
                 offset = CGPointMake(targetIndex * self.anglePerItem / factor, 0);
             }
-            // 这里获取的self.mainView.contentSize.width为0,应该是collectionView的布局还没完全计算出来,可以在下面设置数据源的时候reload之后再加上layoutIfNeeded,但是此时除了图片滚动样式7,其他样式如果设置了无限循环轮播还是会从第0行开始,就是下面的[self.mainView setContentOffset:offset animated:NO];会失效,所以这里我直接手动计算出来,因为layout类里面有写,直接用过来就行了
+            // 这里获取的self.mainView.contentSize.width为0,应该是collectionView的布局还没完全计算出来,可以在下面设置数据源的时候reload之后再加上layoutIfNeeded,但是此时除了图片滚动样式7,其他样式如果设置了无限循环轮播还是会从第0行开始,就是下面的[weakSelf.mainView setContentOffset:offset animated:NO];会失效,所以这里我直接手动计算出来,因为layout类里面有写,直接用过来就行了
         } else {
             if (self.scrollDirection == UICollectionViewScrollDirectionVertical) {
                 offset = CGPointMake(0, -(_selfHeight - (_itemSize.height + self.space)) / 2 + targetIndex * (_itemSize.height + self.space));
@@ -519,9 +523,9 @@
                 offset = CGPointMake(-(_selfWidth - (_itemSize.width + self.space)) / 2 + targetIndex * (_itemSize.width + self.space), 0);
             }
         }
-        
+        __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.mainView setContentOffset:offset animated:NO];
+            [weakSelf.mainView setContentOffset:offset animated:NO];
         });
         _isSetCenter = NO;
     }

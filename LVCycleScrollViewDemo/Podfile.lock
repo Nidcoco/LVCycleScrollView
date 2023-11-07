@@ -1,10 +1,10 @@
 PODS:
-  - LVCycleScrollView (1.0.0):
-    - SDWebImage
+  - LVCycleScrollView (1.0.4):
+    - SDWebImage (>= 5.0.0)
   - Masonry (1.1.0)
-  - SDWebImage (5.12.1):
-    - SDWebImage/Core (= 5.12.1)
-  - SDWebImage/Core (5.12.1)
+  - SDWebImage (5.18.3):
+    - SDWebImage/Core (= 5.18.3)
+  - SDWebImage/Core (5.18.3)
 
 DEPENDENCIES:
   - LVCycleScrollView
@@ -17,9 +17,9 @@ SPEC REPOS:
     - SDWebImage
 
 SPEC CHECKSUMS:
-  LVCycleScrollView: 78abd7e94c1a6b324a99748b50272de9e3a97d9f
+  LVCycleScrollView: 2d736bab1c2a553990d69c3ab591d4b1158760f9
   Masonry: 678fab65091a9290e40e2832a55e7ab731aad201
-  SDWebImage: 4dc3e42d9ec0c1028b960a33ac6b637bb432207b
+  SDWebImage: 96e0c18ef14010b7485210e92fac888587ebb958
 
 PODFILE CHECKSUM: aee1f85f3f3e751f4fb05da424289b9c2f19cc93
 
