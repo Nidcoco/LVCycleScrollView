@@ -30,6 +30,15 @@ Pod::Spec.new do |spec|
   spec.ios.deployment_target = '8.0'
   
   spec.dependency "SDWebImage", '>= 5.0.0'
+  
+  spec.user_target_xcconfig = {
+    'GENERATE_INFOPLIST_FILE' => 'YES'
+  }
+
+  spec.pod_target_xcconfig = {
+    'GENERATE_INFOPLIST_FILE' => 'YES'
+  }
+
 
 
 end
